@@ -1,0 +1,2051 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>CantIA v2 — Plataforma Inteligente de Obras</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   TOKENS & RESET
+═══════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  /* Base */
+  --ink:#0D0F12;
+  --ink2:#141720;
+  --ink3:#1C2030;
+  --ink4:#242840;
+  --surface:#0A0C10;
+  --card:#111520;
+  --glass:rgba(20,23,32,.85);
+
+  /* Accents */
+  --fire:#FF5F1F;
+  --fire-dim:rgba(255,95,31,.12);
+  --fire-border:rgba(255,95,31,.25);
+  --teal:#00D4B1;
+  --teal-dim:rgba(0,212,177,.1);
+  --teal-border:rgba(0,212,177,.25);
+  --sky:#3D9BFF;
+  --sky-dim:rgba(61,155,255,.1);
+  --gold:#F0B429;
+  --gold-dim:rgba(240,180,41,.1);
+  --red:#FF4757;
+  --red-dim:rgba(255,71,87,.1);
+  --green:#2ECC71;
+  --green-dim:rgba(46,204,113,.1);
+  --purple:#A78BFA;
+
+  /* Text */
+  --t1:#F2F0EC;
+  --t2:#9BA3B5;
+  --t3:#555D70;
+
+  /* Border */
+  --b1:rgba(255,255,255,.06);
+  --b2:rgba(255,255,255,.04);
+
+  /* Layout */
+  --sidebar-w:230px;
+  --top-h:52px;
+  --radius:8px;
+  --radius-lg:12px;
+
+  /* Fonts */
+  --font-ui:'Space Grotesk',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --font-display:'Fraunces',serif;
+}
+
+html,body{height:100%;background:var(--surface);color:var(--t1);font-family:var(--font-ui);font-size:14px;line-height:1.5;overflow:hidden}
+button{font-family:var(--font-ui);cursor:pointer}
+input,select,textarea{font-family:var(--font-ui)}
+a{text-decoration:none;color:inherit}
+
+/* ═══════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════ */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--ink4);border-radius:2px}
+
+/* ═══════════════════════════════════════
+   LOGIN SCREEN
+═══════════════════════════════════════ */
+#login-screen{
+  position:fixed;inset:0;z-index:999;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--surface);
+  padding:1rem;
+}
+.login-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 50%, rgba(0,212,177,.06) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 60% at 80% 30%, rgba(255,95,31,.05) 0%,transparent 60%);
+}
+.login-noise{
+  position:absolute;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+  opacity:.5;
+}
+.login-card{
+  position:relative;z-index:1;
+  width:100%;max-width:420px;
+  background:var(--card);
+  border:1px solid var(--b1);
+  border-radius:var(--radius-lg);
+  padding:2.5rem;
+  animation:slideUp .5s cubic-bezier(.16,1,.3,1);
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.login-wordmark{
+  font-family:var(--font-display);
+  font-size:2rem;
+  font-weight:700;
+  color:var(--t1);
+  letter-spacing:-.03em;
+  margin-bottom:.15rem;
+}
+.login-wordmark em{color:var(--fire);font-style:normal}
+.login-sub{font-size:.8rem;color:var(--t3);margin-bottom:2rem;letter-spacing:.02em}
+.login-version{
+  display:inline-flex;align-items:center;gap:.4rem;
+  background:var(--fire-dim);border:1px solid var(--fire-border);
+  color:var(--fire);font-size:.7rem;font-family:var(--font-mono);
+  padding:.2rem .65rem;border-radius:3px;margin-bottom:1.5rem;
+}
+
+.field{margin-bottom:.875rem}
+.field label{display:block;font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.35rem}
+.field input,.field select,.field textarea{
+  width:100%;
+  background:var(--ink2);border:1px solid var(--b1);color:var(--t1);
+  padding:.65rem .875rem;border-radius:var(--radius);
+  font-size:.875rem;outline:none;transition:border-color .2s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--teal)}
+.field input::placeholder{color:var(--t3)}
+.field select option{background:var(--ink2)}
+
+.api-hint{
+  display:flex;align-items:flex-start;gap:.5rem;
+  background:var(--teal-dim);border:1px solid var(--teal-border);
+  border-radius:var(--radius);padding:.75rem;
+  font-size:.78rem;color:var(--t2);line-height:1.5;
+  margin-bottom:1rem;
+}
+.api-hint strong{color:var(--teal)}
+
+.role-picker{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-bottom:1.25rem}
+.role-opt{
+  background:var(--ink2);border:1px solid var(--b1);color:var(--t3);
+  padding:.6rem .5rem;border-radius:6px;cursor:pointer;
+  font-size:.8rem;text-align:center;transition:all .2s;
+}
+.role-opt.active{border-color:var(--fire);color:var(--fire);background:var(--fire-dim)}
+.role-opt:hover:not(.active){border-color:var(--b1);color:var(--t2);background:var(--ink3)}
+
+.btn-login{
+  width:100%;background:var(--fire);color:#fff;border:none;
+  padding:.8rem;border-radius:var(--radius);
+  font-family:var(--font-ui);font-weight:600;font-size:.95rem;
+  cursor:pointer;transition:all .2s;letter-spacing:.01em;
+}
+.btn-login:hover{background:#e8521a;transform:translateY(-1px)}
+.login-demo{text-align:center;font-size:.75rem;color:var(--t3);margin-top:.875rem}
+.login-demo span{color:var(--teal);cursor:pointer}
+.login-demo span:hover{text-decoration:underline}
+
+/* ═══════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════ */
+#app{display:none;height:100%;flex-direction:column}
+#app.show{display:flex}
+
+/* TOPBAR */
+.topbar{
+  height:var(--top-h);flex-shrink:0;
+  background:var(--glass);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;padding:0 1rem;gap:.75rem;
+  position:relative;z-index:50;
+}
+.topbar-logo{
+  font-family:var(--font-display);font-weight:700;font-size:1.2rem;
+  color:var(--t1);letter-spacing:-.02em;margin-right:.25rem;
+}
+.topbar-logo em{color:var(--fire);font-style:normal}
+.topbar-ver{
+  font-family:var(--font-mono);font-size:.65rem;color:var(--t3);
+  background:var(--ink3);padding:.15rem .45rem;border-radius:3px;
+}
+.topbar-obra-sel{
+  margin-left:auto;
+  display:flex;align-items:center;gap:.5rem;
+  background:var(--ink2);border:1px solid var(--b1);
+  padding:.4rem .75rem;border-radius:var(--radius);
+  cursor:pointer;transition:border-color .2s;max-width:200px;
+  font-size:.8rem;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.topbar-obra-sel:hover{border-color:var(--b2)}
+.topbar-obra-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+.topbar-actions{display:flex;align-items:center;gap:.4rem}
+.icon-btn{
+  width:32px;height:32px;
+  background:var(--ink2);border:1px solid var(--b1);
+  border-radius:var(--radius);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .2s;font-size:.9rem;position:relative;
+}
+.icon-btn:hover{background:var(--ink3);border-color:var(--b2)}
+.notif-pip{
+  position:absolute;top:5px;right:5px;
+  width:5px;height:5px;border-radius:50%;background:var(--red);
+}
+.ai-status{
+  display:flex;align-items:center;gap:.35rem;
+  font-size:.72rem;font-family:var(--font-mono);
+  padding:.3rem .65rem;border-radius:3px;cursor:default;
+}
+.ai-status.connected{background:var(--teal-dim);border:1px solid var(--teal-border);color:var(--teal)}
+.ai-status.mock{background:var(--gold-dim);border:1px solid rgba(240,180,41,.25);color:var(--gold)}
+.ai-status.error{background:var(--red-dim);border:1px solid rgba(255,71,87,.25);color:var(--red)}
+.ai-pip{width:5px;height:5px;border-radius:50%;background:currentColor}
+.topbar-user{
+  display:flex;align-items:center;gap:.5rem;cursor:pointer;padding:.3rem;border-radius:var(--radius);transition:background .2s;
+}
+.topbar-user:hover{background:var(--ink2)}
+.avatar{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,var(--fire),#FF9A3D);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:.7rem;color:#fff;flex-shrink:0;
+}
+.user-info{display:none}
+@media(min-width:640px){.user-info{display:block}}
+.user-name{font-size:.8rem;font-weight:500;line-height:1.2}
+.user-role{font-size:.7rem;color:var(--t3)}
+.burger{display:flex;flex-direction:column;gap:4px;cursor:pointer;padding:.5rem;margin-right:.25rem}
+.burger span{width:16px;height:1.5px;background:var(--t2);border-radius:1px;transition:all .3s}
+.burger.open span:nth-child(1){transform:rotate(45deg) translate(4px,4px)}
+.burger.open span:nth-child(2){opacity:0}
+.burger.open span:nth-child(3){transform:rotate(-45deg) translate(4px,-4px)}
+
+/* BODY */
+.body-wrap{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{
+  width:var(--sidebar-w);flex-shrink:0;
+  background:var(--ink);border-right:1px solid var(--b1);
+  display:flex;flex-direction:column;overflow-y:auto;
+  transition:transform .3s cubic-bezier(.16,1,.3,1);
+}
+@media(max-width:767px){
+  .sidebar{position:absolute;top:var(--top-h);bottom:0;z-index:40;transform:translateX(-100%)}
+  .sidebar.open{transform:none}
+  .burger{display:flex}
+}
+@media(min-width:768px){.burger{display:none}}
+.sidebar-overlay{position:fixed;inset:0;top:var(--top-h);background:rgba(0,0,0,.5);z-index:30;display:none}
+.sidebar-overlay.show{display:block}
+
+.nav-group{padding:.75rem .5rem .25rem}
+.nav-group-label{
+  font-size:.62rem;color:var(--t3);text-transform:uppercase;
+  letter-spacing:.12em;font-family:var(--font-mono);
+  padding:0 .5rem;margin-bottom:.25rem;
+}
+.nav-item{
+  display:flex;align-items:center;gap:.65rem;
+  padding:.55rem .75rem;border-radius:6px;
+  cursor:pointer;color:var(--t2);font-size:.82rem;font-weight:500;
+  transition:all .2s;background:none;border:none;width:100%;text-align:left;
+  position:relative;
+}
+.nav-item:hover{color:var(--t1);background:var(--ink2)}
+.nav-item.active{color:var(--t1);background:var(--ink3)}
+.nav-item.active::before{
+  content:'';position:absolute;left:-1px;top:50%;transform:translateY(-50%);
+  width:2px;height:16px;background:var(--fire);border-radius:1px;
+}
+.nav-item.saneamento.active::before{background:var(--teal)}
+.nav-icon{width:16px;text-align:center;font-size:.95rem;flex-shrink:0}
+.nav-badge{
+  margin-left:auto;background:var(--red);color:#fff;
+  font-size:.6rem;padding:.1rem .35rem;border-radius:2px;
+  font-family:var(--font-mono);min-width:16px;text-align:center;
+}
+.nav-badge.info{background:var(--teal)}
+.sidebar-bottom{margin-top:auto;padding:.75rem .5rem;border-top:1px solid var(--b1)}
+.sidebar-api-status{
+  display:flex;align-items:center;gap:.5rem;
+  padding:.5rem .75rem;border-radius:6px;
+  background:var(--ink2);margin-bottom:.5rem;
+  font-size:.72rem;color:var(--t3);font-family:var(--font-mono);
+}
+.sidebar-api-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.btn-logout{
+  display:flex;align-items:center;gap:.65rem;
+  padding:.55rem .75rem;border-radius:6px;
+  color:var(--t3);font-size:.82rem;background:none;border:none;
+  width:100%;cursor:pointer;transition:color .2s;
+}
+.btn-logout:hover{color:var(--red)}
+
+/* MODULE TAG — visual separator for Saneamento */
+.module-tag{
+  display:inline-flex;align-items:center;gap:.4rem;
+  font-size:.65rem;font-family:var(--font-mono);
+  padding:.2rem .55rem;border-radius:3px;
+}
+.module-obras{background:var(--fire-dim);border:1px solid var(--fire-border);color:var(--fire)}
+.module-san{background:var(--teal-dim);border:1px solid var(--teal-border);color:var(--teal)}
+
+/* ═══════════════════════════════════════
+   CONTENT
+═══════════════════════════════════════ */
+.content{flex:1;overflow-y:auto;overflow-x:hidden}
+.page{display:none;padding:1.25rem;animation:fadeIn .2s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.page-header{margin-bottom:1.5rem}
+.page-title{
+  font-family:var(--font-display);font-size:1.6rem;
+  font-weight:700;letter-spacing:-.03em;line-height:1.1;
+  display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;
+  margin-bottom:.3rem;
+}
+.page-sub{font-size:.82rem;color:var(--t3);display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+.page-sub-dot{width:3px;height:3px;border-radius:50%;background:var(--t3)}
+
+/* ═══════════════════════════════════════
+   COMPONENTS
+═══════════════════════════════════════ */
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.65rem;margin-bottom:1rem}
+.kpi{
+  background:var(--card);border:1px solid var(--b1);
+  border-radius:var(--radius-lg);padding:1rem 1rem .875rem;
+  transition:border-color .2s;
+}
+.kpi:hover{border-color:var(--b2)}
+.kpi-val{
+  font-family:var(--font-mono);font-size:1.55rem;font-weight:700;
+  line-height:1;margin-bottom:.3rem;
+}
+.kpi-label{font-size:.72rem;color:var(--t3);line-height:1.3;margin-bottom:.35rem}
+.kpi-trend{font-size:.68rem;font-family:var(--font-mono)}
+.kpi-trend.up{color:var(--green)}
+.kpi-trend.down{color:var(--red)}
+.kpi-trend.warn{color:var(--gold)}
+.kpi-trend.info{color:var(--teal)}
+.c-fire{color:var(--fire)}
+.c-teal{color:var(--teal)}
+.c-sky{color:var(--sky)}
+.c-gold{color:var(--gold)}
+.c-red{color:var(--red)}
+.c-green{color:var(--green)}
+.c-purple{color:var(--purple)}
+
+/* CARD */
+.card{
+  background:var(--card);border:1px solid var(--b1);
+  border-radius:var(--radius-lg);padding:1.25rem;
+  margin-bottom:.75rem;
+}
+.card-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;
+}
+.card-title{font-weight:600;font-size:.9rem}
+.card-sub{font-size:.75rem;color:var(--t3);font-family:var(--font-mono)}
+
+/* GRID LAYOUTS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem}
+@media(max-width:600px){.g2,.g3{grid-template-columns:1fr}}
+@media(min-width:601px) and (max-width:900px){.g3{grid-template-columns:1fr 1fr}}
+
+/* PROGRESS */
+.prog{margin-bottom:.65rem}
+.prog-hd{display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:.3rem}
+.prog-label{color:var(--t2)}
+.prog-val{font-family:var(--font-mono);font-size:.78rem}
+.prog-track{height:5px;background:var(--ink3);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width 1s cubic-bezier(.16,1,.3,1)}
+
+/* ALERT BANNERS */
+.alert{
+  display:flex;gap:.75rem;padding:.875rem 1rem;
+  border-radius:var(--radius);margin-bottom:.6rem;
+  font-size:.82rem;line-height:1.5;align-items:flex-start;
+}
+.alert-icon{font-size:1rem;flex-shrink:0;margin-top:.05rem}
+.alert-body{flex:1}
+.alert-body strong{font-weight:600}
+.a-red{background:var(--red-dim);border:1px solid rgba(255,71,87,.2)}
+.a-gold{background:var(--gold-dim);border:1px solid rgba(240,180,41,.2)}
+.a-green{background:var(--green-dim);border:1px solid rgba(46,204,113,.2)}
+.a-teal{background:var(--teal-dim);border:1px solid var(--teal-border)}
+.a-sky{background:var(--sky-dim);border:1px solid rgba(61,155,255,.2)}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;margin:-1px}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th{
+  font-family:var(--font-mono);font-size:.62rem;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--t3);padding:.55rem .75rem;
+  border-bottom:1px solid var(--b1);text-align:left;white-space:nowrap;
+}
+td{padding:.6rem .75rem;border-bottom:1px solid var(--b2);color:var(--t2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.015);color:var(--t1)}
+.mono{font-family:var(--font-mono)}
+
+/* STATUS BADGES */
+.badge{
+  display:inline-flex;align-items:center;gap:.3rem;
+  padding:.18rem .55rem;border-radius:3px;
+  font-size:.68rem;font-family:var(--font-mono);white-space:nowrap;
+}
+.b-green{background:var(--green-dim);color:var(--green)}
+.b-gold{background:var(--gold-dim);color:var(--gold)}
+.b-red{background:var(--red-dim);color:var(--red)}
+.b-teal{background:var(--teal-dim);color:var(--teal)}
+.b-sky{background:var(--sky-dim);color:var(--sky)}
+.b-fire{background:var(--fire-dim);color:var(--fire)}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;gap:.4rem;
+  padding:.55rem 1.1rem;border-radius:var(--radius);
+  font-family:var(--font-ui);font-weight:500;font-size:.82rem;
+  cursor:pointer;transition:all .15s;border:none;letter-spacing:.01em;
+}
+.btn-sm{padding:.35rem .7rem;font-size:.78rem}
+.btn-fire{background:var(--fire);color:#fff}
+.btn-fire:hover{background:#e8521a;transform:translateY(-1px)}
+.btn-teal{background:var(--teal);color:#000}
+.btn-teal:hover{background:#00bfa0}
+.btn-ghost{background:transparent;border:1px solid var(--b1);color:var(--t2)}
+.btn-ghost:hover{border-color:var(--b2);background:var(--ink2);color:var(--t1)}
+.btn-red{background:var(--red);color:#fff}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--b1);margin-bottom:1.25rem;overflow-x:auto;gap:0}
+.tab{
+  padding:.6rem 1.25rem;font-size:.82rem;color:var(--t3);
+  cursor:pointer;border-bottom:2px solid transparent;
+  white-space:nowrap;transition:all .2s;font-weight:500;
+}
+.tab:hover{color:var(--t1)}
+.tab.active{color:var(--t1);border-bottom-color:var(--fire)}
+.tab.active.teal{border-bottom-color:var(--teal);color:var(--teal)}
+.tabp{display:none}
+.tabp.active{display:block}
+
+/* FORM ROW */
+.frow{display:grid;gap:.75rem;margin-bottom:.75rem}
+.frow-2{grid-template-columns:1fr 1fr}
+.frow-3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:500px){.frow-2,.frow-3{grid-template-columns:1fr}}
+.field-compact label{display:block;font-size:.68rem;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem}
+.field-compact input,.field-compact select,.field-compact textarea{
+  width:100%;background:var(--ink2);border:1px solid var(--b1);
+  color:var(--t1);padding:.6rem .8rem;border-radius:var(--radius);
+  font-size:.82rem;outline:none;transition:border-color .2s;
+}
+.field-compact input:focus,.field-compact select:focus,.field-compact textarea:focus{border-color:var(--teal)}
+.field-compact select option{background:var(--ink2)}
+
+/* ═══════════════════════════════════════
+   AI MODULE EMBEDDED
+═══════════════════════════════════════ */
+.ai-panel{
+  background:linear-gradient(135deg,rgba(0,212,177,.04),rgba(61,155,255,.04));
+  border:1px solid var(--teal-border);
+  border-radius:var(--radius-lg);padding:1rem 1.1rem;margin-bottom:.75rem;
+  position:relative;overflow:hidden;
+}
+.ai-panel::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--teal),transparent);
+  opacity:.4;
+}
+.ai-panel-head{display:flex;align-items:center;gap:.6rem;margin-bottom:.65rem}
+.ai-chip{
+  display:inline-flex;align-items:center;gap:.35rem;
+  background:rgba(0,212,177,.12);border:1px solid var(--teal-border);
+  color:var(--teal);font-size:.68rem;font-family:var(--font-mono);
+  padding:.2rem .55rem;border-radius:3px;letter-spacing:.04em;
+}
+.ai-chip-dot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.ai-text{font-size:.84rem;color:var(--t2);line-height:1.65}
+.ai-actions{display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap}
+.ai-btn{
+  background:rgba(0,212,177,.08);border:1px solid var(--teal-border);
+  color:var(--teal);font-size:.75rem;padding:.3rem .75rem;
+  border-radius:4px;cursor:pointer;transition:all .2s;font-family:var(--font-ui);
+}
+.ai-btn:hover{background:rgba(0,212,177,.16)}
+.ai-loading{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--t3);padding:.5rem 0}
+.ai-spinner{width:14px;height:14px;border:2px solid var(--b1);border-top-color:var(--teal);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══════════════════════════════════════
+   CHAT PAGE
+═══════════════════════════════════════ */
+.chat-layout{display:flex;flex-direction:column;height:calc(100vh - var(--top-h) - 100px)}
+.chat-context{
+  display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;
+  padding:.6rem;background:var(--ink2);border:1px solid var(--b1);
+  border-radius:var(--radius);margin-bottom:.75rem;font-size:.75rem;
+}
+.ctx-tag{
+  display:flex;align-items:center;gap:.3rem;
+  background:var(--ink3);border:1px solid var(--b1);
+  padding:.2rem .55rem;border-radius:3px;color:var(--t3);
+  font-family:var(--font-mono);font-size:.68rem;
+}
+.ctx-tag strong{color:var(--t2)}
+.messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.65rem;padding:.25rem 0}
+.msg{max-width:88%;animation:fadeIn .2s ease}
+.msg-user{align-self:flex-end}
+.msg-ai{align-self:flex-start}
+.bubble{padding:.75rem 1rem;border-radius:8px;font-size:.83rem;line-height:1.65}
+.bubble-user{background:var(--fire);color:#fff;border-radius:8px 8px 0 8px}
+.bubble-ai{
+  background:var(--card);border:1px solid var(--b1);
+  border-radius:0 8px 8px 8px;color:var(--t2);
+}
+.bubble-ai strong{color:var(--t1)}
+.bubble-ai code{
+  font-family:var(--font-mono);font-size:.8rem;
+  background:var(--ink3);padding:.1rem .35rem;border-radius:3px;color:var(--teal);
+}
+.msg-meta{font-size:.68rem;color:var(--t3);margin-top:.25rem;padding:0 .25rem;font-family:var(--font-mono)}
+.typing-dots{display:flex;gap:4px;align-items:center;padding:.75rem 1rem}
+.td{width:6px;height:6px;border-radius:50%;background:var(--t3);animation:bounce .8s infinite}
+.td:nth-child(2){animation-delay:.15s}
+.td:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:none}40%{transform:translateY(-5px)}}
+.chat-input-row{display:flex;gap:.5rem;padding:.75rem 0 0;border-top:1px solid var(--b1);align-items:flex-end}
+.chat-textarea{
+  flex:1;background:var(--ink2);border:1px solid var(--b1);
+  color:var(--t1);padding:.7rem .875rem;border-radius:var(--radius);
+  font-size:.85rem;resize:none;min-height:42px;max-height:120px;
+  outline:none;transition:border-color .2s;line-height:1.4;font-family:var(--font-ui);
+}
+.chat-textarea:focus{border-color:var(--teal)}
+.chat-send{
+  width:42px;height:42px;background:var(--teal);border:none;
+  color:#000;border-radius:var(--radius);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;
+  transition:all .2s;flex-shrink:0;
+}
+.chat-send:hover{background:#00bfa0}
+.chat-send:disabled{background:var(--ink3);color:var(--t3);cursor:not-allowed}
+.quick-prompts{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem}
+.qp{
+  background:var(--ink2);border:1px solid var(--b1);color:var(--t3);
+  padding:.3rem .75rem;border-radius:4px;font-size:.75rem;cursor:pointer;transition:all .2s;
+}
+.qp:hover{border-color:var(--teal-border);color:var(--teal);background:var(--teal-dim)}
+
+/* ═══════════════════════════════════════
+   MODAL
+═══════════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);
+  backdrop-filter:blur(6px);z-index:200;
+  display:flex;align-items:center;justify-content:center;
+  padding:1rem;opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{
+  background:var(--card);border:1px solid var(--b1);border-radius:var(--radius-lg);
+  width:100%;max-width:520px;max-height:88vh;overflow-y:auto;
+  padding:1.5rem;animation:slideUp .3s cubic-bezier(.16,1,.3,1);
+}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.modal-title{font-weight:600;font-size:1rem}
+.modal-close{background:none;border:none;color:var(--t3);font-size:1.1rem;cursor:pointer;padding:.25rem}
+.modal-close:hover{color:var(--t1)}
+.modal-foot{display:flex;gap:.65rem;justify-content:flex-end;margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--b1)}
+
+/* ═══════════════════════════════════════
+   SANEAMENTO — MAP-LIKE VISUAL
+═══════════════════════════════════════ */
+.rede-viz{
+  background:var(--ink);border:1px solid var(--b1);
+  border-radius:var(--radius);overflow:hidden;position:relative;
+  height:200px;margin-bottom:.75rem;
+}
+.rede-grid{
+  position:absolute;inset:0;
+  background-image:linear-gradient(var(--b2) 1px,transparent 1px),
+    linear-gradient(90deg,var(--b2) 1px,transparent 1px);
+  background-size:24px 24px;
+}
+.rede-svg{position:absolute;inset:0;width:100%;height:100%}
+.rede-label{
+  position:absolute;top:.75rem;left:.75rem;
+  font-family:var(--font-mono);font-size:.65rem;color:var(--t3);
+  background:var(--ink2);padding:.2rem .55rem;border-radius:3px;
+  border:1px solid var(--b1);
+}
+.rede-legend{
+  position:absolute;bottom:.75rem;right:.75rem;
+  display:flex;flex-direction:column;gap:.3rem;
+}
+.rede-legend-item{display:flex;align-items:center;gap:.4rem;font-size:.65rem;color:var(--t3);font-family:var(--font-mono)}
+.rede-legend-line{width:16px;height:2px;border-radius:1px}
+
+/* ═══════════════════════════════════════
+   RISK MATRIX
+═══════════════════════════════════════ */
+.risk-wrap{display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+.risk-cell{
+  aspect-ratio:1;border-radius:3px;display:flex;align-items:center;justify-content:center;
+  font-size:.6rem;font-family:var(--font-mono);cursor:default;transition:transform .1s;
+}
+.risk-cell:hover{transform:scale(1.1);z-index:1}
+.rc-l{background:rgba(46,204,113,.15);color:var(--green)}
+.rc-m{background:rgba(240,180,41,.15);color:var(--gold)}
+.rc-h{background:rgba(255,71,87,.15);color:var(--red)}
+.rc-c{background:rgba(255,71,87,.35);color:var(--red);font-weight:700}
+
+/* ═══════════════════════════════════════
+   MOBILE BOTTOM NAV
+═══════════════════════════════════════ */
+.bottom-nav{
+  display:none;
+  background:var(--glass);backdrop-filter:blur(16px);
+  border-top:1px solid var(--b1);padding:.5rem 0 max(.5rem,env(safe-area-inset-bottom));
+  flex-shrink:0;
+}
+@media(max-width:767px){.bottom-nav{display:flex}}
+.bnav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  gap:.2rem;padding:.4rem;cursor:pointer;color:var(--t3);
+  font-size:.58rem;letter-spacing:.02em;transition:color .2s;
+  background:none;border:none;
+}
+.bnav-item.active{color:var(--fire)}
+.bnav-item.active.teal{color:var(--teal)}
+.bnav-icon{font-size:1.15rem}
+
+/* ═══════════════════════════════════════
+   SECTION DIVIDER
+═══════════════════════════════════════ */
+.section-divider{
+  display:flex;align-items:center;gap:.75rem;
+  margin:1.25rem 0 .875rem;
+}
+.section-divider-line{flex:1;height:1px;background:var(--b1)}
+.section-divider-label{
+  font-size:.65rem;color:var(--t3);text-transform:uppercase;
+  letter-spacing:.12em;font-family:var(--font-mono);white-space:nowrap;
+}
+
+/* CHIPS */
+.chip{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .55rem;border-radius:3px;font-size:.7rem;font-family:var(--font-mono);border:1px solid}
+.chip-fire{background:var(--fire-dim);color:var(--fire);border-color:var(--fire-border)}
+.chip-teal{background:var(--teal-dim);color:var(--teal);border-color:var(--teal-border)}
+.chip-green{background:var(--green-dim);color:var(--green);border-color:rgba(46,204,113,.25)}
+.chip-red{background:var(--red-dim);color:var(--red);border-color:rgba(255,71,87,.25)}
+.chip-gold{background:var(--gold-dim);color:var(--gold);border-color:rgba(240,180,41,.25)}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <div class="login-bg"></div>
+  <div class="login-noise"></div>
+  <div class="login-card">
+    <div class="login-version">CANTIA · v2.0 · DESAFIO IA 2026</div>
+    <div class="login-wordmark">Cant<em>IA</em></div>
+    <div class="login-sub">Gestão Inteligente de Obras · IA Embarcada</div>
+
+    <div class="field">
+      <label>E-mail</label>
+      <input id="l-email" type="email" value="gestor@construtora.com.br" placeholder="seu@email.com.br">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input id="l-pass" type="password" value="••••••••" placeholder="senha">
+    </div>
+
+    <div class="api-hint">
+      <span>🔑</span>
+      <div><strong>Chave API Claude (opcional)</strong> — deixe em branco para usar modo demonstração com respostas simuladas. Em produção, insira sua chave da <strong>Anthropic Console</strong>.</div>
+    </div>
+    <div class="field">
+      <label>Anthropic API Key (opcional)</label>
+      <input id="l-apikey" type="password" placeholder="sk-ant-api... (opcional)">
+    </div>
+
+    <div class="field" style="margin-bottom:.5rem">
+      <label>Perfil de acesso</label>
+      <div class="role-picker">
+        <div class="role-opt active" onclick="pickRole(this,'gestor')">🏗 Gestor</div>
+        <div class="role-opt" onclick="pickRole(this,'engenheiro')">📐 Engenheiro</div>
+        <div class="role-opt" onclick="pickRole(this,'ehs')">🦺 EHS</div>
+        <div class="role-opt" onclick="pickRole(this,'tecnico')">🔧 Técnico</div>
+      </div>
+    </div>
+
+    <button class="btn-login" onclick="doLogin()">Entrar na plataforma →</button>
+    <div class="login-demo">
+      Demo rápido: <span onclick="quickDemo('obras')">Obras Civis</span> · <span onclick="quickDemo('san')">Saneamento</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="burger" id="burger" onclick="toggleSidebar()">
+      <span></span><span></span><span></span>
+    </div>
+    <div class="topbar-logo">Cant<em>IA</em></div>
+    <div class="topbar-ver">v2.0</div>
+
+    <div class="topbar-obra-sel" onclick="openModal('m-obras')" id="obra-sel">
+      <div class="topbar-obra-dot"></div>
+      <span id="obra-name">Vila Nova Etapa 2</span>
+      ▾
+    </div>
+
+    <div class="topbar-actions" style="margin-left:auto">
+      <div class="ai-status" id="ai-status-top">
+        <div class="ai-pip"></div>
+        <span id="ai-status-txt">IA Demo</span>
+      </div>
+      <div class="icon-btn" onclick="nav('alertas')" title="Alertas">🔔<div class="notif-pip"></div></div>
+      <div class="topbar-user" onclick="openModal('m-perfil')">
+        <div class="avatar" id="top-avatar">GS</div>
+        <div class="user-info">
+          <div class="user-name" id="top-name">Gestor Silva</div>
+          <div class="user-role" id="top-role">Gestor</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="body-wrap">
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+      <div class="nav-group">
+        <div class="nav-group-label">Obras Civis</div>
+        <button class="nav-item active" id="ni-dashboard" onclick="nav('dashboard')">
+          <span class="nav-icon">◼</span>Dashboard
+        </button>
+        <button class="nav-item" id="ni-medicoes" onclick="nav('medicoes')">
+          <span class="nav-icon">📋</span>Boletins
+        </button>
+        <button class="nav-item" id="ni-ehs" onclick="nav('ehs')">
+          <span class="nav-icon">🦺</span>EHS
+          <span class="nav-badge">3</span>
+        </button>
+        <button class="nav-item" id="ni-inspecoes" onclick="nav('inspecoes')">
+          <span class="nav-icon">🔍</span>Inspeções
+        </button>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-label" style="color:var(--teal)">Saneamento</div>
+        <button class="nav-item saneamento" id="ni-san-dashboard" onclick="nav('san-dashboard')">
+          <span class="nav-icon">💧</span>Painel Geral
+        </button>
+        <button class="nav-item saneamento" id="ni-san-redes" onclick="nav('san-redes')">
+          <span class="nav-icon">🗺</span>Redes
+        </button>
+        <button class="nav-item saneamento" id="ni-san-agua" onclick="nav('san-agua')">
+          <span class="nav-icon">🚰</span>Água
+          <span class="nav-badge info">2</span>
+        </button>
+        <button class="nav-item saneamento" id="ni-san-esgoto" onclick="nav('san-esgoto')">
+          <span class="nav-icon">🔄</span>Esgoto
+        </button>
+        <button class="nav-item saneamento" id="ni-san-qualidade" onclick="nav('san-qualidade')">
+          <span class="nav-icon">🧪</span>Qualidade
+        </button>
+        <button class="nav-item saneamento" id="ni-san-perdas" onclick="nav('san-perdas')">
+          <span class="nav-icon">📉</span>Perdas
+        </button>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-label">IA & Relatórios</div>
+        <button class="nav-item" id="ni-ia" onclick="nav('ia')">
+          <span class="nav-icon">🤖</span>Assistente IA
+        </button>
+        <button class="nav-item" id="ni-relatorios" onclick="nav('relatorios')">
+          <span class="nav-icon">📄</span>Relatórios
+        </button>
+        <button class="nav-item" id="ni-alertas" onclick="nav('alertas')">
+          <span class="nav-icon">🔔</span>Alertas
+          <span class="nav-badge">5</span>
+        </button>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-label">Admin</div>
+        <button class="nav-item" id="ni-obras" onclick="nav('obras')">
+          <span class="nav-icon">🏗</span>Obras
+        </button>
+        <button class="nav-item" id="ni-usuarios" onclick="nav('usuarios')">
+          <span class="nav-icon">👥</span>Usuários
+        </button>
+        <button class="nav-item" id="ni-config" onclick="nav('config')">
+          <span class="nav-icon">⚙</span>Config. IA
+        </button>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-api-status" id="sidebar-api">
+          <div class="sidebar-api-dot" id="sidebar-api-dot" style="background:var(--gold)"></div>
+          <span id="sidebar-api-txt">Modo demonstração</span>
+        </div>
+        <button class="btn-logout" onclick="doLogout()">↩ Sair da conta</button>
+      </div>
+    </nav>
+
+    <!-- CONTENT -->
+    <main class="content" id="content">
+
+      <!-- ═══ DASHBOARD OBRAS ═══ -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header">
+          <div class="page-title">
+            Dashboard
+            <span class="module-tag module-obras">OBRAS CIVIS</span>
+          </div>
+          <div class="page-sub">
+            Vila Nova Etapa 2
+            <span class="page-sub-dot"></span>
+            Última atualização: 08h47
+            <span class="page-sub-dot"></span>
+            <span style="color:var(--green)">● ao vivo</span>
+          </div>
+        </div>
+
+        <div class="ai-panel" id="dash-ai-panel">
+          <div class="ai-panel-head">
+            <div class="ai-chip"><div class="ai-chip-dot"></div>CLAUDE IA EMBARCADA</div>
+            <button class="btn btn-ghost btn-sm" onclick="generateDashInsight()">↻ Atualizar análise</button>
+          </div>
+          <div id="dash-ai-text" class="ai-text">
+            Obra com avanço físico de <strong>84%</strong>, porém com <strong>desvio de 12 dias</strong> na frente de alvenaria (Bloco C). Identifiquei queda de 32% na produtividade — de 118 m²/dia para 82 m²/dia — nos últimos 4 boletins. Causa raiz provável: redução de equipe de 14 para 9 pedreiros pós-feriado. Impacto projetado: <strong>R$ 87.400</strong> em custo adicional se não corrigido até semana 19.
+          </div>
+          <div class="ai-actions">
+            <button class="ai-btn" onclick="nav('ia')">💬 Aprofundar no chat</button>
+            <button class="ai-btn" onclick="generateReport('gerencial')">📄 Gerar relatório</button>
+            <button class="ai-btn">📤 Enviar ao cliente</button>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-val c-fire">84%</div><div class="kpi-label">Avanço físico</div><div class="kpi-trend warn">▲ +2% / semana</div></div>
+          <div class="kpi"><div class="kpi-val c-red">−12d</div><div class="kpi-label">Desvio de prazo</div><div class="kpi-trend down">▼ piora vs. ant.</div></div>
+          <div class="kpi"><div class="kpi-val c-fire">R$1.2M</div><div class="kpi-label">Medido no mês</div><div class="kpi-trend up">✓ 94% do previsto</div></div>
+          <div class="kpi"><div class="kpi-val c-green">0</div><div class="kpi-label">Incidentes EHS</div><div class="kpi-trend up">✓ 21 dias zerado</div></div>
+          <div class="kpi"><div class="kpi-val c-sky">5</div><div class="kpi-label">Alertas ativos</div><div class="kpi-trend down">3 críticos</div></div>
+          <div class="kpi"><div class="kpi-val c-green">92%</div><div class="kpi-label">NR-18 conform.</div><div class="kpi-trend up">▲ +4% mês ant.</div></div>
+        </div>
+
+        <div class="g2">
+          <div class="card">
+            <div class="card-head"><div class="card-title">Avanço por frente</div><div class="card-sub">semana 18</div></div>
+            <div class="prog"><div class="prog-hd"><span class="prog-label">Fundações</span><span class="prog-val c-green">100%</span></div><div class="prog-track"><div class="prog-fill" style="width:100%;background:var(--green)"></div></div></div>
+            <div class="prog"><div class="prog-hd"><span class="prog-label">Estrutura</span><span class="prog-val c-green">97%</span></div><div class="prog-track"><div class="prog-fill" style="width:97%;background:var(--green)"></div></div></div>
+            <div class="prog"><div class="prog-hd"><span class="prog-label">Alvenaria Bloco A</span><span class="prog-val c-green">91%</span></div><div class="prog-track"><div class="prog-fill" style="width:91%;background:var(--green)"></div></div></div>
+            <div class="prog"><div class="prog-hd"><span class="prog-label">⚠ Alvenaria Bloco C</span><span class="prog-val c-gold">68%</span></div><div class="prog-track"><div class="prog-fill" style="width:68%;background:var(--gold)"></div></div></div>
+            <div class="prog"><div class="prog-hd"><span class="prog-label">Instalações Elét.</span><span class="prog-val c-gold">54%</span></div><div class="prog-track"><div class="prog-fill" style="width:54%;background:var(--gold)"></div></div></div>
+            <div class="prog"><div class="prog-hd"><span class="prog-label">Revestimentos</span><span class="prog-val c-red">31%</span></div><div class="prog-track"><div class="prog-fill" style="width:31%;background:var(--red)"></div></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Alertas prioritários</div><div class="card-sub">por IA</div></div>
+            <div class="alert a-red"><div class="alert-icon">🔴</div><div class="alert-body"><strong>Alvenaria Bloco C</strong> — -32% produtividade. Risco R$ 87k.</div></div>
+            <div class="alert a-gold"><div class="alert-icon">🟡</div><div class="alert-body"><strong>NR-18 vencida</strong> — Torre andaime B. Inspecionar hoje.</div></div>
+            <div class="alert a-gold"><div class="alert-icon">🟡</div><div class="alert-body"><strong>Boletim #48 atrasado</strong> — Instalações Elétricas, 3 dias.</div></div>
+            <div class="alert a-sky"><div class="alert-icon">🔵</div><div class="alert-body"><strong>Chuvas 40mm</strong> — Quinta-feira. Proteger concreto bloco A.</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div class="card-title">Boletins recentes</div><button class="btn btn-ghost btn-sm" onclick="nav('medicoes')">Ver todos</button></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Frente</th><th>Período</th><th>Medido</th><th>Prev.</th><th>Var%</th><th>Status IA</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">#47</td><td>Alvenaria Bloco C</td><td>25abr–01mai</td><td class="mono">2.840 m²</td><td class="mono">3.360 m²</td><td class="mono c-red">−15%</td><td><span class="badge b-gold">⚠ Desvio</span></td></tr>
+                <tr><td class="mono">#46</td><td>Instalações Elét.</td><td>18–24abr</td><td class="mono">1.200 m</td><td class="mono">1.180 m</td><td class="mono c-green">+1.7%</td><td><span class="badge b-green">✓ Ok</span></td></tr>
+                <tr><td class="mono">#45</td><td>Concreto Estrutural</td><td>11–17abr</td><td class="mono">980 m³</td><td class="mono">960 m³</td><td class="mono c-green">+2.1%</td><td><span class="badge b-green">✓ Ok</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ BOLETINS ═══ -->
+      <div class="page" id="page-medicoes">
+        <div class="page-header">
+          <div class="page-title">Boletins de Medição <span class="module-tag module-obras">OBRAS CIVIS</span></div>
+          <div class="page-sub">Registro digital · Análise automática por IA · Histórico completo</div>
+        </div>
+        <div style="display:flex;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap">
+          <button class="btn btn-fire" onclick="openModal('m-boletim')">+ Novo boletim</button>
+          <button class="btn btn-ghost">📎 Importar PDF</button>
+          <button class="btn btn-ghost" onclick="nav('ia')">🤖 Chat IA</button>
+        </div>
+        <div class="ai-panel">
+          <div class="ai-panel-head"><div class="ai-chip"><div class="ai-chip-dot"></div>ANÁLISE COMPARATIVA</div></div>
+          <div class="ai-text" id="med-ai-text">Comparando boletins #44–#47 na frente de alvenaria: queda progressiva de produtividade de <strong>118 → 82 m²/dia</strong> (−30.5%). Correlação com redução de equipe detectada no RDO. Impacto acumulado projetado: <strong>+18 dias e R$ 112.000</strong> se tendência não revertida.</div>
+          <div class="ai-actions"><button class="ai-btn" onclick="generateMedAnalysis()">↻ Reanalisar boletins</button></div>
+        </div>
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this,'tb-todos')">Todos</div>
+          <div class="tab" onclick="switchTab(this,'tb-desvios')">Com desvios</div>
+          <div class="tab" onclick="switchTab(this,'tb-pend')">Pendentes</div>
+        </div>
+        <div class="tabp active" id="tb-todos">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Frente / Serviço</th><th>Responsável</th><th>Período</th><th>Medido</th><th>Previsto</th><th>Var%</th><th>IA</th><th></th></tr></thead>
+              <tbody>
+                <tr><td class="mono">#47</td><td>Alvenaria Bloco C</td><td>F. Costa</td><td>25abr–01mai</td><td class="mono">2.840 m²</td><td class="mono">3.360 m²</td><td class="mono c-red">−15%</td><td><span class="badge b-gold">⚠ Desvio</span></td><td><button class="btn btn-ghost btn-sm" onclick="openModal('m-blt-ia')">Analisar</button></td></tr>
+                <tr><td class="mono">#46</td><td>Instalações Elét.</td><td>M. Rocha</td><td>18–24abr</td><td class="mono">1.200 m</td><td class="mono">1.180 m</td><td class="mono c-green">+1.7%</td><td><span class="badge b-green">✓ Ok</span></td><td><button class="btn btn-ghost btn-sm">Ver</button></td></tr>
+                <tr><td class="mono">#45</td><td>Concreto Estrutural</td><td>F. Costa</td><td>11–17abr</td><td class="mono">980 m³</td><td class="mono">960 m³</td><td class="mono c-green">+2.1%</td><td><span class="badge b-green">✓ Ok</span></td><td><button class="btn btn-ghost btn-sm">Ver</button></td></tr>
+                <tr><td class="mono">#44</td><td>Alvenaria Bloco A</td><td>F. Costa</td><td>04–10abr</td><td class="mono">3.100 m²</td><td class="mono">3.000 m²</td><td class="mono c-green">+3.3%</td><td><span class="badge b-green">✓ Ok</span></td><td><button class="btn btn-ghost btn-sm">Ver</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="tabp" id="tb-desvios">
+          <div class="alert a-gold"><div class="alert-icon">⚠</div><div class="alert-body"><strong>#47 — Alvenaria Bloco C</strong>: −15% quantidade. Causa IA: redução equipe.</div></div>
+          <div class="alert a-gold"><div class="alert-icon">⚠</div><div class="alert-body"><strong>#43 — Revestimentos</strong>: −22%. Material aguardando entrega de fornecedor.</div></div>
+        </div>
+        <div class="tabp" id="tb-pend">
+          <div class="alert a-red"><div class="alert-icon">🔴</div><div class="alert-body"><strong>Boletim #48 — Instalações Elétricas</strong>: 3 dias em atraso. Responsável: M. Rocha.</div></div>
+        </div>
+      </div>
+
+      <!-- ═══ EHS ═══ -->
+      <div class="page" id="page-ehs">
+        <div class="page-header">
+          <div class="page-title">Gestão EHS <span class="module-tag module-obras">OBRAS CIVIS</span></div>
+          <div class="page-sub">Ambiental · Saúde · Segurança · Análise preditiva por IA</div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-val c-green">21</div><div class="kpi-label">Dias sem acidente</div></div>
+          <div class="kpi"><div class="kpi-val c-green">0</div><div class="kpi-label">Incidentes (mês)</div></div>
+          <div class="kpi"><div class="kpi-val c-gold">3</div><div class="kpi-label">Near-miss pendentes</div></div>
+          <div class="kpi"><div class="kpi-val c-green">92%</div><div class="kpi-label">NR-18 conformidade</div></div>
+          <div class="kpi"><div class="kpi-val c-sky">87%</div><div class="kpi-label">EPIs auditados</div></div>
+          <div class="kpi"><div class="kpi-val c-green">−31%</div><div class="kpi-label">Resíduos vs. meta</div></div>
+        </div>
+        <div class="g2">
+          <div class="card">
+            <div class="card-head"><div class="card-title">Matriz de Risco</div><div class="card-sub">dinâmica · IA</div></div>
+            <div style="font-size:.68rem;color:var(--t3);margin-bottom:.4rem;font-family:var(--font-mono)">Probabilidade ↑ / Severidade →</div>
+            <div class="risk-wrap" id="risk-matrix"></div>
+            <div style="display:flex;gap:.75rem;margin-top:.65rem">
+              <span style="color:var(--green);font-size:.68rem;font-family:var(--font-mono)">■ Baixo</span>
+              <span style="color:var(--gold);font-size:.68rem;font-family:var(--font-mono)">■ Médio</span>
+              <span style="color:var(--red);font-size:.68rem;font-family:var(--font-mono)">■ Alto ■ Crítico</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Análise preditiva</div><div class="card-sub">próximos 7 dias</div></div>
+            <div class="ai-panel" style="margin-bottom:.65rem">
+              <div class="ai-panel-head"><div class="ai-chip"><div class="ai-chip-dot"></div>RISCO CLIMÁTICO</div></div>
+              <div class="ai-text" style="font-size:.8rem">Chuvas 40mm previstas quinta-feira elevam risco de queda no Bloco C. Andaimes expostos. <strong>Inspeção emergencial recomendada em 24h.</strong></div>
+            </div>
+            <div class="alert a-red"><div class="alert-icon">🔴</div><div class="alert-body"><strong>Andaime Bloco C T3</strong> — NR-18 vencida. Paralisar uso.</div></div>
+            <div class="alert a-gold"><div class="alert-icon">🟡</div><div class="alert-body"><strong>3 near-misses</strong> — padrão: queda de objeto em instalações.</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Check-list NR-18</div><button class="btn btn-fire btn-sm" onclick="openModal('m-insp')">+ Inspecionar</button></div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Item NR-18</th><th>Área</th><th>Status</th><th>Responsável</th><th>Prazo</th></tr></thead>
+            <tbody>
+              <tr><td>18.15 — Andaimes</td><td>Bloco C T3</td><td><span class="badge b-red">✗ Vencido</span></td><td>J. Santos</td><td class="c-red mono">Ontem</td></tr>
+              <tr><td>18.20 — PCMAT</td><td>Geral</td><td><span class="badge b-green">✓ Ok</span></td><td>EHS Team</td><td class="mono">01/jun</td></tr>
+              <tr><td>18.22 — EPIs</td><td>Instalações</td><td><span class="badge b-gold">⚠ Parcial</span></td><td>M. Lima</td><td class="mono">05/mai</td></tr>
+              <tr><td>18.30 — Elétrica prov.</td><td>Bloco A</td><td><span class="badge b-green">✓ Ok</span></td><td>R. Pinto</td><td class="mono">15/mai</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ═══ INSPEÇÕES ═══ -->
+      <div class="page" id="page-inspecoes">
+        <div class="page-header">
+          <div class="page-title">Inspeções de Campo <span class="module-tag module-obras">OBRAS CIVIS</span></div>
+          <div class="page-sub">Check-lists assistidos por IA · Evidência fotográfica · Rastreabilidade</div>
+        </div>
+        <button class="btn btn-fire" style="margin-bottom:1rem" onclick="openModal('m-insp')">+ Iniciar inspeção</button>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Histórico</div></div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Data</th><th>Tipo</th><th>Área</th><th>Inspector</th><th>Score</th><th>N/C</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>01/mai</td><td>NR-18 Geral</td><td>Obra inteira</td><td>P. Alves</td><td class="c-green mono">92%</td><td>2</td><td><span class="badge b-green">✓ Conforme</span></td></tr>
+              <tr><td>28/abr</td><td>EPI / PPE</td><td>Bloco C</td><td>M. Lima</td><td class="c-gold mono">78%</td><td>5</td><td><span class="badge b-gold">⚠ Parcial</span></td></tr>
+              <tr><td>22/abr</td><td>Elétrica prov.</td><td>Bloco A</td><td>R. Pinto</td><td class="c-green mono">95%</td><td>1</td><td><span class="badge b-green">✓ Conforme</span></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ═══ SANEAMENTO — PAINEL GERAL ═══ -->
+      <div class="page" id="page-san-dashboard">
+        <div class="page-header">
+          <div class="page-title">Painel Saneamento <span class="module-tag module-san">SANEAMENTO</span></div>
+          <div class="page-sub">Redes de Água e Esgoto · SAA + SES · ABNT NBR 12218 / NBR 9649</div>
+        </div>
+
+        <div class="ai-panel">
+          <div class="ai-panel-head">
+            <div class="ai-chip"><div class="ai-chip-dot"></div>CLAUDE IA — SANEAMENTO</div>
+            <button class="btn btn-ghost btn-sm" onclick="generateSanInsight()">↻ Atualizar análise</button>
+          </div>
+          <div class="ai-text" id="san-ai-text">Sistema com <strong>IPD de 38%</strong> nas redes de distribuição — acima do limite regulatório FUNASA (25%). Causa identificada: zona de pressão desbalanceada no setor N-04 com picos de 62 m.c.a. Recomendo inspeção de tubos DN150 no trecho km 2.4–3.1 e instalação de VRP no ponto de controle P-07. Redes de esgoto com <strong>2 pontos de infiltração ativa</strong> detectados via análise de vazão noturna.</div>
+          <div class="ai-actions">
+            <button class="ai-btn" onclick="askSanChat('Quais ações priorizar para reduzir o IPD?')">💧 Reduzir perdas</button>
+            <button class="ai-btn" onclick="askSanChat('Analise a conformidade ABNT das redes')">📋 Conf. ABNT</button>
+            <button class="ai-btn" onclick="generateReport('saneamento')">📄 Relatório SNIS</button>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-val c-red">38%</div><div class="kpi-label">Índice Perdas Dist.</div><div class="kpi-trend down">▼ meta: 25%</div></div>
+          <div class="kpi"><div class="kpi-val c-teal">47.2</div><div class="kpi-label">km rede água</div><div class="kpi-trend info">+1.8km este mês</div></div>
+          <div class="kpi"><div class="kpi-val c-teal">31.5</div><div class="kpi-label">km rede esgoto</div><div class="kpi-trend info">+0.9km este mês</div></div>
+          <div class="kpi"><div class="kpi-val c-gold">89%</div><div class="kpi-label">Ligações ativas</div><div class="kpi-trend warn">2 com vazamento</div></div>
+          <div class="kpi"><div class="kpi-val c-green">98.2%</div><div class="kpi-label">Qualidade água</div><div class="kpi-trend up">✓ CONAMA 357</div></div>
+          <div class="kpi"><div class="kpi-val c-red">2</div><div class="kpi-label">Ocorrências ativas</div><div class="kpi-trend down">Esgoto: infiltr.</div></div>
+        </div>
+
+        <div class="g2">
+          <div class="card">
+            <div class="card-head"><div class="card-title">Execução de redes</div><div class="card-sub">% concluído</div></div>
+            <div class="prog"><div class="prog-hd"><span class="prog-label">Adutora principal DN400</span><span class="prog-val c-green">100%</span></div><div class="prog-track"><div class="prog-fill" style="width:100%;background:var(--green)"></div></div></div>
+            <div class="prog"><div class="prog-hd"><span class="prog-label">Rede distribuição N-04</span><span class="prog-val c-green">88%</span></div><div class="prog-track"><div class="prog-fill" style="width:88%;background:var(--teal)"></div></div></div>
+            <div class="prog"><div class="prog-hd"><span class="prog-label">Rede distribuição N-05</span><span class="prog-val c-gold">61%</span></div><div class="prog-track"><div class="prog-fill" style="width:61%;background:var(--gold)"></div></div></div>
+            <div class="prog"><div class="prog-hd"><span class="prog-label">⚠ Coletor esgoto S-02</span><span class="prog-val c-gold">54%</span></div><div class="prog-track"><div class="prog-fill" style="width:54%;background:var(--gold)"></div></div></div>
+            <div class="prog"><div class="prog-hd"><span class="prog-label">Interceptor IC-01</span><span class="prog-val c-red">38%</span></div><div class="prog-track"><div class="prog-fill" style="width:38%;background:var(--red)"></div></div></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><div class="card-title">Alertas críticos</div><div class="card-sub">saneamento</div></div>
+            <div class="alert a-red"><div class="alert-icon">🔴</div><div class="alert-body"><strong>IPD 38% — setor N-04</strong>: acima do limite regulatório. VRP P-07 desregulada.</div></div>
+            <div class="alert a-red"><div class="alert-icon">🔴</div><div class="alert-body"><strong>Infiltração esgoto km 2.8</strong>: exfiltração detectada via CCTV. Risco ambiental.</div></div>
+            <div class="alert a-gold"><div class="alert-icon">🟡</div><div class="alert-body"><strong>Pressão 62 m.c.a.</strong>: pico acima da norma NBR 12218 (50 m.c.a. máx.).</div></div>
+            <div class="alert a-teal"><div class="alert-icon">💧</div><div class="alert-body">Coleta de amostras qualidade vence em <strong>3 dias</strong>. Programar equipe.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SANEAMENTO — REDES ═══ -->
+      <div class="page" id="page-san-redes">
+        <div class="page-header">
+          <div class="page-title">Cadastro de Redes <span class="module-tag module-san">SANEAMENTO</span></div>
+          <div class="page-sub">SAA · SES · Georreferenciamento · ABNT NBR 12218 / NBR 9649</div>
+        </div>
+
+        <div style="display:flex;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap">
+          <button class="btn btn-teal" onclick="openModal('m-rede')">+ Cadastrar trecho</button>
+          <button class="btn btn-ghost">🗺 Ver no mapa</button>
+          <button class="btn btn-ghost" onclick="nav('ia')">🤖 Consultar IA</button>
+        </div>
+
+        <!-- Visualização esquemática de rede -->
+        <div class="card" style="padding:.875rem">
+          <div class="card-head"><div class="card-title">Esquema de rede — Setor N-04</div><div class="card-sub">representação simplificada</div></div>
+          <div class="rede-viz">
+            <div class="rede-grid"></div>
+            <svg class="rede-svg" viewBox="0 0 800 200" preserveAspectRatio="none">
+              <!-- Adutora principal (azul escuro) -->
+              <line x1="20" y1="100" x2="780" y2="100" stroke="#1e6fa8" stroke-width="5" stroke-dasharray="0"/>
+              <!-- Rede distribuição água (azul) -->
+              <line x1="200" y1="100" x2="200" y2="30" stroke="#3D9BFF" stroke-width="2.5"/>
+              <line x1="200" y1="30" x2="600" y2="30" stroke="#3D9BFF" stroke-width="2.5"/>
+              <line x1="400" y1="100" x2="400" y2="30" stroke="#3D9BFF" stroke-width="2"/>
+              <line x1="600" y1="100" x2="600" y2="30" stroke="#3D9BFF" stroke-width="2"/>
+              <!-- Rede esgoto (verde) -->
+              <line x1="200" y1="100" x2="200" y2="170" stroke="#2ECC71" stroke-width="2.5"/>
+              <line x1="200" y1="170" x2="600" y2="170" stroke="#2ECC71" stroke-width="2.5"/>
+              <line x1="400" y1="100" x2="400" y2="170" stroke="#2ECC71" stroke-width="2"/>
+              <line x1="600" y1="100" x2="600" y2="170" stroke="#2ECC71" stroke-width="2"/>
+              <!-- Nós / VRP -->
+              <circle cx="200" cy="100" r="6" fill="#3D9BFF" stroke="var(--ink)" stroke-width="2"/>
+              <circle cx="400" cy="100" r="6" fill="#3D9BFF" stroke="var(--ink)" stroke-width="2"/>
+              <circle cx="600" cy="100" r="6" fill="#3D9BFF" stroke="var(--ink)" stroke-width="2"/>
+              <!-- VRP (alaranjado) -->
+              <rect x="380" y="82" width="16" height="16" rx="3" fill="var(--fire)" stroke="var(--ink)" stroke-width="1.5"/>
+              <text x="388" y="95" text-anchor="middle" font-size="9" fill="white" font-family="JetBrains Mono">V</text>
+              <!-- Ponto de infiltração -->
+              <circle cx="480" cy="170" r="8" fill="var(--red)" opacity=".8" stroke="var(--red)" stroke-width="2"/>
+              <text x="480" y="174" text-anchor="middle" font-size="8" fill="white" font-family="JetBrains Mono">!</text>
+              <!-- Rótulos -->
+              <text x="400" y="115" text-anchor="middle" font-size="9" fill="#7A8394" font-family="JetBrains Mono">P-07</text>
+              <text x="480" y="158" text-anchor="middle" font-size="9" fill="var(--red)" font-family="JetBrains Mono">km2.8</text>
+            </svg>
+            <div class="rede-label">SETOR N-04 · ESQUEMA FUNCIONAL</div>
+            <div class="rede-legend">
+              <div class="rede-legend-item"><div class="rede-legend-line" style="background:#1e6fa8"></div>Adutora</div>
+              <div class="rede-legend-item"><div class="rede-legend-line" style="background:var(--sky)"></div>Dist. Água</div>
+              <div class="rede-legend-item"><div class="rede-legend-line" style="background:var(--green)"></div>Esgoto</div>
+              <div class="rede-legend-item"><div class="rede-legend-line" style="background:var(--fire)"></div>VRP</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab active teal" onclick="switchTab(this,'tb-redes-agua')">Redes de Água</div>
+          <div class="tab" onclick="switchTab(this,'tb-redes-esg')">Redes de Esgoto</div>
+          <div class="tab" onclick="switchTab(this,'tb-acessorios')">Acessórios</div>
+        </div>
+        <div class="tabp active" id="tb-redes-agua">
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Trecho</th><th>Material</th><th>DN (mm)</th><th>Extensão</th><th>Profund.</th><th>Pressão</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="mono">AD-01</td><td>DEFOFO</td><td>400</td><td class="mono">1.240 m</td><td class="mono">1.80 m</td><td class="mono c-green">38 m.c.a</td><td><span class="badge b-green">✓ Normal</span></td><td><button class="btn btn-ghost btn-sm">Ver</button></td></tr>
+              <tr><td class="mono">N04-A</td><td>PVC/JE</td><td>150</td><td class="mono">860 m</td><td class="mono">1.20 m</td><td class="mono c-red">62 m.c.a</td><td><span class="badge b-red">⚠ Alta press.</span></td><td><button class="btn btn-ghost btn-sm">Ver</button></td></tr>
+              <tr><td class="mono">N04-B</td><td>PVC/JE</td><td>100</td><td class="mono">520 m</td><td class="mono">1.00 m</td><td class="mono c-green">31 m.c.a</td><td><span class="badge b-green">✓ Normal</span></td><td><button class="btn btn-ghost btn-sm">Ver</button></td></tr>
+              <tr><td class="mono">N05-A</td><td>PEAD</td><td>110</td><td class="mono">430 m</td><td class="mono">1.20 m</td><td class="c-gold mono">—</td><td><span class="badge b-gold">Em exec.</span></td><td><button class="btn btn-ghost btn-sm">Ver</button></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div class="tabp" id="tb-redes-esg">
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Trecho</th><th>Tipo</th><th>Material</th><th>DN (mm)</th><th>Extensão</th><th>Declividade</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="mono">S02-1</td><td>Coletor</td><td>PVC</td><td>200</td><td class="mono">680 m</td><td class="mono">0.6%</td><td><span class="badge b-green">✓ Ok</span></td><td><button class="btn btn-ghost btn-sm">Ver</button></td></tr>
+              <tr><td class="mono">S02-2</td><td>Coletor</td><td>PVC</td><td>200</td><td class="mono">540 m</td><td class="mono c-red">0.3%</td><td><span class="badge b-red">⚠ Decl. min.</span></td><td><button class="btn btn-ghost btn-sm">Ver</button></td></tr>
+              <tr><td class="mono">IC-01</td><td>Interceptor</td><td>DEFOFO</td><td>350</td><td class="mono">1.100 m</td><td class="mono">0.5%</td><td><span class="badge b-gold">Em exec. 38%</span></td><td><button class="btn btn-ghost btn-sm">Ver</button></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div class="tabp" id="tb-acessorios">
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>ID</th><th>Tipo</th><th>Localização</th><th>Fabricante</th><th>Última inspeção</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">VRP-P07</td><td>Válvula Redutora</td><td>km 2.4 N04-A</td><td>Amanco</td><td>28/abr</td><td><span class="badge b-red">⚠ Desregulada</span></td></tr>
+              <tr><td class="mono">REG-14</td><td>Registro gaveta</td><td>km 1.2 N04-B</td><td>Tigre</td><td>15/abr</td><td><span class="badge b-green">✓ Ok</span></td></tr>
+              <tr><td class="mono">MH-22</td><td>Poço visita</td><td>S02-2 km 0.8</td><td>—</td><td>01/mai</td><td><span class="badge b-green">✓ Ok</span></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ═══ SANEAMENTO — ÁGUA ═══ -->
+      <div class="page" id="page-san-agua">
+        <div class="page-header">
+          <div class="page-title">Sistema de Água — SAA <span class="module-tag module-san">SANEAMENTO</span></div>
+          <div class="page-sub">Pressão · Vazão · Ligações prediais · NBR 12218</div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-val c-teal">47.2 km</div><div class="kpi-label">Extensão total</div></div>
+          <div class="kpi"><div class="kpi-val c-red">62 m.c.a</div><div class="kpi-label">Pressão max. N04</div><div class="kpi-trend down">▲ limite 50 m.c.a</div></div>
+          <div class="kpi"><div class="kpi-val c-green">18 m.c.a</div><div class="kpi-label">Pressão mín.</div><div class="kpi-trend up">✓ acima de 10</div></div>
+          <div class="kpi"><div class="kpi-val c-sky">12.4 L/s</div><div class="kpi-label">Vazão adutora</div></div>
+          <div class="kpi"><div class="kpi-val c-gold">1.847</div><div class="kpi-label">Ligações ativas</div></div>
+          <div class="kpi"><div class="kpi-val c-red">38%</div><div class="kpi-label">Índice Perdas Dist.</div></div>
+        </div>
+        <div class="ai-panel">
+          <div class="ai-panel-head"><div class="ai-chip"><div class="ai-chip-dot"></div>DIAGNÓSTICO HIDRÁULICO</div></div>
+          <div class="ai-text" id="agua-ai-text">Análise da zona de pressão N-04: <strong>VRP P-07 com set-point desregulado a 62 m.c.a.</strong> — acima do máximo normativo (NBR 12218, item 5.3.3: ≤ 50 m.c.a.). Isso explica 60% do IPD elevado por stresses na tubulação DN150 PVC/JE (km 2.4–3.1, fabricação 1998 — vida útil comprometida). <strong>Ação recomendada:</strong> Readequar VRP P-07 para 35 m.c.a. e inspecionar juntas no trecho crítico.</div>
+          <div class="ai-actions"><button class="ai-btn" onclick="askSanChat('Calcule o balanço hídrico e identifique as maiores fontes de perda')">Balanço hídrico IA</button></div>
+        </div>
+        <div class="g2">
+          <div class="card">
+            <div class="card-head"><div class="card-title">Mapa de pressões</div><div class="card-sub">zonas reguladas</div></div>
+            <div class="prog"><div class="prog-hd"><span class="prog-label">Zona N-01 (residencial)</span><span class="prog-val c-green">24–36 m.c.a</span></div><div class="prog-track"><div class="prog-fill" style="width:72%;background:var(--green)"></div></div></div>
+            <div class="prog"><div class="prog-hd"><span class="prog-label">Zona N-02 (comercial)</span><span class="prog-val c-green">28–42 m.c.a</span></div><div class="prog-track"><div class="prog-fill" style="width:84%;background:var(--teal)"></div></div></div>
+            <div class="prog"><div class="prog-hd"><span class="prog-label">⚠ Zona N-04 (industrial)</span><span class="prog-val c-red">38–62 m.c.a</span></div><div class="prog-track"><div class="prog-fill" style="width:100%;background:var(--red)"></div></div></div>
+            <div class="prog"><div class="prog-hd"><span class="prog-label">Zona N-05 (novo loteam.)</span><span class="prog-val c-gold">—</span></div><div class="prog-track"><div class="prog-fill" style="width:30%;background:var(--gold)"></div></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Conformidade NBR 12218</div></div>
+            <div class="alert a-red"><div class="alert-icon">✗</div><div class="alert-body"><strong>Art. 5.3.3 — Pressão máx.</strong>: N-04 com 62 m.c.a. Limite: 50. NC.</div></div>
+            <div class="alert a-green"><div class="alert-icon">✓</div><div class="alert-body"><strong>Art. 5.3.2 — Pressão mín.</strong>: todas as zonas acima de 10 m.c.a. Conforme.</div></div>
+            <div class="alert a-green"><div class="alert-icon">✓</div><div class="alert-body"><strong>Art. 6.1 — Cobertura</strong>: 98.4% das economias atendidas. Conforme.</div></div>
+            <div class="alert a-gold"><div class="alert-icon">⚠</div><div class="alert-body"><strong>Art. 7.2 — IPD</strong>: 38% > 25% limite. Plano de melhoria exigido.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SANEAMENTO — ESGOTO ═══ -->
+      <div class="page" id="page-san-esgoto">
+        <div class="page-header">
+          <div class="page-title">Sistema de Esgoto — SES <span class="module-tag module-san">SANEAMENTO</span></div>
+          <div class="page-sub">Coletores · Interceptores · Inspeção CCTV · NBR 9649</div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-val c-teal">31.5 km</div><div class="kpi-label">Extensão total</div></div>
+          <div class="kpi"><div class="kpi-val c-green">78%</div><div class="kpi-label">Taxa coleta</div><div class="kpi-trend up">▲ meta 85%</div></div>
+          <div class="kpi"><div class="kpi-val c-red">2</div><div class="kpi-label">Infiltrações ativas</div></div>
+          <div class="kpi"><div class="kpi-val c-gold">94%</div><div class="kpi-label">Tratamento (ETE)</div></div>
+          <div class="kpi"><div class="kpi-val c-green">1.642</div><div class="kpi-label">Ligações ativas</div></div>
+          <div class="kpi"><div class="kpi-val c-sky">0.5%</div><div class="kpi-label">Declividade mín.</div></div>
+        </div>
+        <div class="ai-panel">
+          <div class="ai-panel-head"><div class="ai-chip"><div class="ai-chip-dot"></div>ANÁLISE DE INFILTRAÇÃO</div></div>
+          <div class="ai-text" id="esg-ai-text">Vazão noturna no coletor S02-2 detectou <strong>anomalia de +2.3 L/s</strong> entre 01h–04h — padrão clássico de infiltração de água subterrânea. Georeferenciamento da anomalia: <strong>km 0.8–1.1</strong>, coincidindo com o trecho de declividade mínima (0.3% vs. mínimo NBR 9649 de 0.5%). Recomendo inspeção CCTV urgente e remontagem do trecho com ajuste de greide.</div>
+          <div class="ai-actions">
+            <button class="ai-btn" onclick="openModal('m-cctv')">📹 Registrar CCTV</button>
+            <button class="ai-btn" onclick="askSanChat('Calcule a capacidade hidráulica do coletor S02-2 e verifique conformidade com NBR 9649')">Análise hidráulica</button>
+          </div>
+        </div>
+        <div class="g2">
+          <div class="card">
+            <div class="card-head"><div class="card-title">Inspeções CCTV</div><button class="btn btn-teal btn-sm" onclick="openModal('m-cctv')">+ Nova CCTV</button></div>
+            <div class="tbl-wrap"><table>
+              <thead><tr><th>Trecho</th><th>Data</th><th>Extensão</th><th>Anomalias</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">S02-1</td><td>28/abr</td><td class="mono">680 m</td><td>0</td><td><span class="badge b-green">✓ Ok</span></td></tr>
+                <tr><td class="mono">S02-2</td><td>02/mai</td><td class="mono">540 m</td><td class="c-red">2</td><td><span class="badge b-red">⚠ Interv.</span></td></tr>
+                <tr><td class="mono">IC-01</td><td>—</td><td>—</td><td>—</td><td><span class="badge b-gold">Pendente</span></td></tr>
+              </tbody>
+            </table></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Conformidade NBR 9649</div></div>
+            <div class="alert a-red"><div class="alert-icon">✗</div><div class="alert-body"><strong>Item 3.4 — Declividade mín.</strong>: S02-2 com 0.3% &lt; 0.5%. Não conforme.</div></div>
+            <div class="alert a-green"><div class="alert-icon">✓</div><div class="alert-body"><strong>Item 4.2 — Tensão tratora</strong>: S02-1 com τ = 1.2 Pa. Conforme.</div></div>
+            <div class="alert a-gold"><div class="alert-icon">⚠</div><div class="alert-body"><strong>Item 5.1 — Cobertura mín.</strong>: trecho IC-01 km 0.3 com 0.9m. Verificar.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SANEAMENTO — QUALIDADE ═══ -->
+      <div class="page" id="page-san-qualidade">
+        <div class="page-header">
+          <div class="page-title">Qualidade da Água <span class="module-tag module-san">SANEAMENTO</span></div>
+          <div class="page-sub">Parâmetros físico-químicos e bacteriológicos · Portaria MS 888/2021 · CONAMA 357</div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-val c-green">7.2</div><div class="kpi-label">pH médio</div><div class="kpi-trend up">✓ 6.0–9.5</div></div>
+          <div class="kpi"><div class="kpi-val c-green">0.32</div><div class="kpi-label">Cloro livre (mg/L)</div><div class="kpi-trend up">✓ 0.2–2.0</div></div>
+          <div class="kpi"><div class="kpi-val c-green">0.18</div><div class="kpi-label">Turbidez (NTU)</div><div class="kpi-trend up">✓ &lt; 0.5</div></div>
+          <div class="kpi"><div class="kpi-val c-green">0</div><div class="kpi-label">Coliformes totais</div><div class="kpi-trend up">✓ ausente</div></div>
+          <div class="kpi"><div class="kpi-val c-gold">0.08</div><div class="kpi-label">Flúor (mg/L)</div><div class="kpi-trend warn">⚠ mín: 0.10</div></div>
+          <div class="kpi"><div class="kpi-val c-green">98.2%</div><div class="kpi-label">Conformidade geral</div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Histórico de amostras</div><button class="btn btn-teal btn-sm" onclick="openModal('m-amostra')">+ Nova amostra</button></div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Data</th><th>Ponto</th><th>pH</th><th>Cloro</th><th>Turbidez</th><th>Coliformes</th><th>Resultado</th></tr></thead>
+            <tbody>
+              <tr><td>01/mai</td><td>P-01 Reservatório</td><td class="mono c-green">7.2</td><td class="mono c-green">0.32</td><td class="mono c-green">0.18</td><td class="c-green">Ausente</td><td><span class="badge b-green">✓ Conforme</span></td></tr>
+              <tr><td>01/mai</td><td>P-02 N-04 km1.2</td><td class="mono c-green">7.1</td><td class="mono c-gold">0.18</td><td class="mono c-green">0.22</td><td class="c-green">Ausente</td><td><span class="badge b-gold">⚠ Cloro baixo</span></td></tr>
+              <tr><td>28/abr</td><td>P-03 N-05 entrada</td><td class="mono c-green">7.4</td><td class="mono c-green">0.35</td><td class="mono c-green">0.15</td><td class="c-green">Ausente</td><td><span class="badge b-green">✓ Conforme</span></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ═══ SANEAMENTO — PERDAS ═══ -->
+      <div class="page" id="page-san-perdas">
+        <div class="page-header">
+          <div class="page-title">Controle de Perdas <span class="module-tag module-san">SANEAMENTO</span></div>
+          <div class="page-sub">IPD · IPA · Balanço hídrico · SNIS · Distrito Medido de Controle</div>
+        </div>
+        <div class="ai-panel">
+          <div class="ai-panel-head"><div class="ai-chip"><div class="ai-chip-dot"></div>BALANÇO HÍDRICO IA</div></div>
+          <div class="ai-text" id="perdas-ai-text">Balanço hídrico do sistema: volume produzido <strong>425 m³/h</strong>, volume faturado <strong>263 m³/h</strong> → <strong>162 m³/h de perdas</strong> (38%). Decomposição: Perdas Físicas <strong>58%</strong> (ruptura de rede + vazamentos em ramais), Perdas Comerciais <strong>42%</strong> (fraudes estimadas + erros de medição). Maior impacto: setor N-04 com pressão desbalanceada — cada 1 m.c.a de excesso de pressão gera ~2% de perdas adicionais.</div>
+          <div class="ai-actions">
+            <button class="ai-btn" onclick="askSanChat('Monte um plano de ação para reduzir o IPD de 38% para 25% em 12 meses')">📋 Plano de redução</button>
+            <button class="ai-btn" onclick="generateReport('snis')">📤 Exportar SNIS</button>
+          </div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-val c-red">38%</div><div class="kpi-label">IPD atual</div><div class="kpi-trend down">meta: 25%</div></div>
+          <div class="kpi"><div class="kpi-val c-sky">162 m³/h</div><div class="kpi-label">Volume perdido</div></div>
+          <div class="kpi"><div class="kpi-val c-gold">58%</div><div class="kpi-label">Perdas físicas</div></div>
+          <div class="kpi"><div class="kpi-val c-gold">42%</div><div class="kpi-label">Perdas comerciais</div></div>
+          <div class="kpi"><div class="kpi-val c-sky">R$28k</div><div class="kpi-label">Custo mensal perdas</div></div>
+          <div class="kpi"><div class="kpi-val c-green">2</div><div class="kpi-label">DMC ativos</div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Distribuição de perdas por setor</div></div>
+          <div class="prog"><div class="prog-hd"><span class="prog-label">⚠ Setor N-04 (maior contribuição)</span><span class="prog-val c-red">52 m³/h · 32%</span></div><div class="prog-track"><div class="prog-fill" style="width:85%;background:var(--red)"></div></div></div>
+          <div class="prog"><div class="prog-hd"><span class="prog-label">Setor N-02</span><span class="prog-val c-gold">38 m³/h · 23%</span></div><div class="prog-track"><div class="prog-fill" style="width:62%;background:var(--gold)"></div></div></div>
+          <div class="prog"><div class="prog-hd"><span class="prog-label">Setor N-01</span><span class="prog-val c-gold">42 m³/h · 26%</span></div><div class="prog-track"><div class="prog-fill" style="width:68%;background:var(--gold)"></div></div></div>
+          <div class="prog"><div class="prog-hd"><span class="prog-label">Setor N-05 (novo)</span><span class="prog-val c-green">30 m³/h · 19%</span></div><div class="prog-track"><div class="prog-fill" style="width:48%;background:var(--teal)"></div></div></div>
+        </div>
+      </div>
+
+      <!-- ═══ ASSISTENTE IA ═══ -->
+      <div class="page" id="page-ia">
+        <div class="page-header">
+          <div class="page-title">Assistente IA <span class="ai-chip" style="font-size:.7rem"><div class="ai-chip-dot"></div>CLAUDE EMBARCADO</span></div>
+          <div class="page-sub">Chat em português · Obras civis + Saneamento · Normas ABNT/NR</div>
+        </div>
+
+        <div class="quick-prompts">
+          <div class="qp" onclick="useQP(this)">Qual o risco de atraso na entrega?</div>
+          <div class="qp" onclick="useQP(this)">IPD está acima do limite — o que fazer?</div>
+          <div class="qp" onclick="useQP(this)">Gere um relatório executivo da semana</div>
+          <div class="qp" onclick="useQP(this)">Verifique conformidade NBR 9649 do esgoto</div>
+          <div class="qp" onclick="useQP(this)">Qual a causa raiz do desvio no Bloco C?</div>
+        </div>
+
+        <div class="chat-context">
+          <span style="font-size:.72rem;color:var(--t3);font-family:var(--font-mono)">CONTEXTO ATIVO:</span>
+          <span class="ctx-tag">🏗 <strong>Vila Nova Etapa 2</strong></span>
+          <span class="ctx-tag">💧 <strong>SAA/SES Setor N-04</strong></span>
+          <span class="ctx-tag">📋 <strong>47 boletins</strong></span>
+          <span class="ctx-tag">🦺 <strong>EHS ativo</strong></span>
+        </div>
+
+        <div class="chat-layout">
+          <div class="messages" id="chat-msgs">
+            <div class="msg msg-ai">
+              <div class="bubble bubble-ai">Olá! Sou o CantIA, assistente de gestão de obras com <strong>IA Claude embarcada</strong>. Tenho acesso completo aos dados da <strong>Obra Vila Nova Etapa 2</strong> e do <strong>Sistema de Saneamento Setor N-04</strong>. Posso analisar boletins, diagnosticar perdas, verificar conformidade com normas técnicas e gerar relatórios em português.<br><br>O que você precisa hoje?</div>
+              <div class="msg-meta">CantIA · Pronto</div>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <textarea class="chat-textarea" id="chat-input" placeholder="Pergunte sobre a obra, saneamento, normas ABNT, EHS..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+            <button class="chat-send" id="chat-send-btn" onclick="sendMsg()">➤</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ ALERTAS ═══ -->
+      <div class="page" id="page-alertas">
+        <div class="page-header">
+          <div class="page-title">Central de Alertas</div>
+          <div class="page-sub">5 alertas ativos · 3 críticos · Ordenados por IA por prioridade</div>
+        </div>
+        <div class="alert a-red"><div class="alert-icon">🔴</div><div class="alert-body"><strong>[CRÍTICO — OBRAS]</strong> Andaime Bloco C Torre 3 — NR-18 vencida. Paralisar uso imediatamente. <button class="btn btn-fire btn-sm" style="margin-left:.75rem" onclick="openModal('m-insp')">Inspecionar</button></div></div>
+        <div class="alert a-red"><div class="alert-icon">🔴</div><div class="alert-body"><strong>[CRÍTICO — OBRAS]</strong> Produtividade Bloco C −30% vs. previsto. Risco financeiro R$ 87k.</div></div>
+        <div class="alert a-red"><div class="alert-icon">🔴</div><div class="alert-body"><strong>[CRÍTICO — SANEAMENTO]</strong> IPD 38% acima do limite regulatório (25%). VRP P-07 desregulada.</div></div>
+        <div class="alert a-red"><div class="alert-icon">🔴</div><div class="alert-body"><strong>[CRÍTICO — SANEAMENTO]</strong> Infiltração ativa esgoto S02-2 km 0.8. Risco ambiental. Intervenção urgente.</div></div>
+        <div class="alert a-gold"><div class="alert-icon">🟡</div><div class="alert-body"><strong>[ATENÇÃO — OBRAS]</strong> Boletim #48 atrasado 3 dias. Responsável: M. Rocha.</div></div>
+        <div class="alert a-gold"><div class="alert-icon">🟡</div><div class="alert-body"><strong>[ATENÇÃO — SANEAMENTO]</strong> Pressão N-04 atingiu 62 m.c.a. (limite NBR 12218: 50 m.c.a.).</div></div>
+        <div class="alert a-teal"><div class="alert-icon">💧</div><div class="alert-body"><strong>[INFO — SANEAMENTO]</strong> Coleta amostras qualidade vence em 3 dias. Programar equipe.</div></div>
+        <div class="alert a-green"><div class="alert-icon">✅</div><div class="alert-body"><strong>21 dias consecutivos</strong> sem acidente registrado! Parabéns à equipe.</div></div>
+      </div>
+
+      <!-- ═══ RELATÓRIOS ═══ -->
+      <div class="page" id="page-relatorios">
+        <div class="page-header">
+          <div class="page-title">Relatórios IA</div>
+          <div class="page-sub">Documentos gerados automaticamente com narrativa técnica</div>
+        </div>
+        <div style="display:flex;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap">
+          <button class="btn btn-fire" onclick="openModal('m-rel')">+ Gerar relatório</button>
+          <button class="btn btn-teal" onclick="generateReport('snis')">📤 Exportar SNIS</button>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Relatórios disponíveis</div></div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Título</th><th>Módulo</th><th>Tipo</th><th>Gerado em</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>Relatório Mensal Abril/2026</td><td><span class="chip chip-fire">Obras</span></td><td>Gerencial</td><td class="mono">01/mai 09:12</td><td><span class="badge b-green">✓ Pronto</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
+              <tr><td>Boletim EHS — Semana 17</td><td><span class="chip chip-fire">Obras</span></td><td>EHS</td><td class="mono">28/abr 18:00</td><td><span class="badge b-green">✓ Pronto</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
+              <tr><td>Relatório SNIS Q1/2026</td><td><span class="chip chip-teal">Saneamento</span></td><td>Regulatório</td><td class="mono">01/mai 08:00</td><td><span class="badge b-green">✓ Pronto</span></td><td><button class="btn btn-ghost btn-sm">PDF</button></td></tr>
+              <tr><td>Análise de Perdas — Abr/2026</td><td><span class="chip chip-teal">Saneamento</span></td><td>Técnico</td><td class="mono">02/mai 10:30</td><td><span class="badge b-gold">⏳ Gerando</span></td><td><button class="btn btn-ghost btn-sm" disabled>Aguarde</button></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ═══ OBRAS ═══ -->
+      <div class="page" id="page-obras">
+        <div class="page-header"><div class="page-title">Obras</div><div class="page-sub">Portfólio de canteiros ativos</div></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.75rem">
+          <div class="card" style="cursor:pointer" onclick="nav('dashboard')">
+            <div style="display:flex;justify-content:space-between;margin-bottom:.75rem">
+              <div><div style="font-weight:700">Vila Nova Etapa 2</div><div style="font-size:.75rem;color:var(--t3)">São Paulo · SP</div></div>
+              <span class="badge b-gold">Em andamento</span>
+            </div>
+            <div class="prog"><div class="prog-hd"><span class="prog-label">Avanço físico</span><span class="prog-val c-fire">84%</span></div><div class="prog-track"><div class="prog-fill" style="width:84%;background:var(--fire)"></div></div></div>
+            <div style="display:flex;gap:.4rem;margin-top:.6rem;flex-wrap:wrap"><span class="chip chip-red">Desvio 12d</span><span class="chip chip-green">EHS ok</span></div>
+          </div>
+          <div class="card" style="cursor:pointer" onclick="nav('san-dashboard')">
+            <div style="display:flex;justify-content:space-between;margin-bottom:.75rem">
+              <div><div style="font-weight:700">SAA/SES Setor N-04</div><div style="font-size:.75rem;color:var(--t3)">Guarulhos · SP</div></div>
+              <span class="badge b-red">Alerta IPD</span>
+            </div>
+            <div class="prog"><div class="prog-hd"><span class="prog-label">Exec. redes água</span><span class="prog-val c-teal">74%</span></div><div class="prog-track"><div class="prog-fill" style="width:74%;background:var(--teal)"></div></div></div>
+            <div style="display:flex;gap:.4rem;margin-top:.6rem;flex-wrap:wrap"><span class="chip chip-red">IPD 38%</span><span class="chip" style="background:var(--teal-dim);color:var(--teal);border-color:var(--teal-border)">SAA+SES</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ USUÁRIOS ═══ -->
+      <div class="page" id="page-usuarios">
+        <div class="page-header"><div class="page-title">Usuários</div><div class="page-sub">Controle de acesso por perfil e módulo</div></div>
+        <button class="btn btn-fire" style="margin-bottom:1rem" onclick="openModal('m-user')">+ Convidar usuário</button>
+        <div class="card">
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Nome</th><th>Email</th><th>Perfil</th><th>Acesso</th><th>Último acesso</th><th></th></tr></thead>
+            <tbody>
+              <tr><td id="u-name-row">Gestor Silva</td><td class="mono">gestor@construtora.com.br</td><td><span class="chip chip-fire">Gestor</span></td><td>Todos</td><td>Hoje</td><td><button class="btn btn-ghost btn-sm">Editar</button></td></tr>
+              <tr><td>Fernanda Costa</td><td class="mono">f.costa@construtora.com.br</td><td><span class="chip chip-teal">Engenheiro</span></td><td>Obras</td><td>Hoje</td><td><button class="btn btn-ghost btn-sm">Editar</button></td></tr>
+              <tr><td>Paulo Alves</td><td class="mono">p.alves@construtora.com.br</td><td><span class="chip chip-green">EHS</span></td><td>EHS+San</td><td>Ontem</td><td><button class="btn btn-ghost btn-sm">Editar</button></td></tr>
+              <tr><td>Marcos Rocha</td><td class="mono">m.rocha@construtora.com.br</td><td><span class="chip" style="background:rgba(167,139,250,.1);color:var(--purple);border:1px solid rgba(167,139,250,.25)">Técnico</span></td><td>Obras</td><td>01/mai</td><td><button class="btn btn-ghost btn-sm">Editar</button></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ═══ CONFIG IA ═══ -->
+      <div class="page" id="page-config">
+        <div class="page-header"><div class="page-title">Configuração IA</div><div class="page-sub">Chave API · Modelo · Comportamento</div></div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Anthropic Claude API</div></div>
+          <div class="field-compact" style="margin-bottom:.875rem">
+            <label>API Key (salva em memória)</label>
+            <input type="password" id="cfg-apikey" placeholder="sk-ant-api..." oninput="updateApiKey(this.value)">
+          </div>
+          <div class="field-compact" style="margin-bottom:.875rem">
+            <label>Modelo</label>
+            <select id="cfg-model" onchange="updateModel(this.value)">
+              <option value="claude-sonnet-4-20250514" selected>claude-sonnet-4-20250514 (recomendado)</option>
+              <option value="claude-opus-4-6">claude-opus-4-6 (mais capaz)</option>
+              <option value="claude-haiku-4-5-20251001">claude-haiku-4-5-20251001 (mais rápido)</option>
+            </select>
+          </div>
+          <div id="cfg-status-box" class="alert a-gold">
+            <div class="alert-icon">🔑</div>
+            <div class="alert-body" id="cfg-status-text">Modo demonstração ativo. Insira uma API Key válida para usar Claude real.</div>
+          </div>
+          <button class="btn btn-teal" onclick="testApiKey()">Testar conexão IA →</button>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Prompt de contexto</div><div class="card-sub">ajuste o comportamento da IA</div></div>
+          <div class="field-compact">
+            <label>Instruções adicionais para o assistente</label>
+            <textarea rows="4" placeholder="Ex: Sempre responda em linguagem técnica. Priorize análises de saneamento. Mencione normas ABNT relevantes."></textarea>
+          </div>
+          <button class="btn btn-fire btn-sm">Salvar instruções</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- BOTTOM NAV (mobile) -->
+  <div class="bottom-nav">
+    <button class="bnav-item active" id="bn-dash" onclick="nav('dashboard')"><div class="bnav-icon">◼</div>Obras</button>
+    <button class="bnav-item teal" id="bn-san" onclick="nav('san-dashboard')"><div class="bnav-icon">💧</div>Saneam.</button>
+    <button class="bnav-item" id="bn-ia" onclick="nav('ia')"><div class="bnav-icon">🤖</div>IA</button>
+    <button class="bnav-item" id="bn-ehs" onclick="nav('ehs')"><div class="bnav-icon">🦺</div>EHS</button>
+    <button class="bnav-item" id="bn-alrt" onclick="nav('alertas')"><div class="bnav-icon">🔔</div>Alertas</button>
+  </div>
+</div>
+
+<!-- ═══════════ MODAIS ═══════════ -->
+
+<!-- Obra selector -->
+<div class="modal-overlay" id="m-obras">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Selecionar Obra / Sistema</div><button class="modal-close" onclick="closeModal('m-obras')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:.4rem">
+      <button class="nav-item active" onclick="selectObra('Vila Nova Etapa 2','dashboard');closeModal('m-obras')">🏗 Vila Nova Etapa 2 <span class="badge b-gold" style="margin-left:auto">Em andamento</span></button>
+      <button class="nav-item" onclick="selectObra('SAA/SES Setor N-04','san-dashboard');closeModal('m-obras')">💧 SAA/SES Setor N-04 <span class="badge b-red" style="margin-left:auto">Alerta IPD</span></button>
+      <button class="nav-item" onclick="selectObra('Galpão Industrial K7','obras');closeModal('m-obras')">🏭 Galpão Industrial K7 <span class="badge b-green" style="margin-left:auto">No prazo</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Boletim -->
+<div class="modal-overlay" id="m-boletim">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Novo Boletim de Medição</div><button class="modal-close" onclick="closeModal('m-boletim')">✕</button></div>
+    <div class="frow frow-2">
+      <div class="field-compact"><label>Frente / Serviço</label><select><option>Alvenaria — Bloco C</option><option>Instalações Elétricas</option><option>Revestimentos</option></select></div>
+      <div class="field-compact"><label>Responsável</label><select><option>Fernanda Costa</option><option>Marcos Rocha</option></select></div>
+    </div>
+    <div class="frow frow-2">
+      <div class="field-compact"><label>Data início</label><input type="date" value="2026-05-02"></div>
+      <div class="field-compact"><label>Data fim</label><input type="date" value="2026-05-08"></div>
+    </div>
+    <div class="frow frow-3">
+      <div class="field-compact"><label>Qtd. medida</label><input type="text" placeholder="ex: 2840"></div>
+      <div class="field-compact"><label>Qtd. prevista</label><input type="text" placeholder="ex: 3360"></div>
+      <div class="field-compact"><label>Unidade</label><select><option>m²</option><option>m³</option><option>m</option><option>un</option><option>kg</option></select></div>
+    </div>
+    <div class="field-compact" style="margin-bottom:1rem"><label>Observações</label><textarea rows="3" placeholder="Ocorrências, causas de desvio..."></textarea></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-boletim')">Cancelar</button>
+      <button class="btn btn-fire" onclick="submitBoletim()">Salvar e analisar com IA →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Boletim IA analysis -->
+<div class="modal-overlay" id="m-blt-ia">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Boletim #47 — Análise IA</div><button class="modal-close" onclick="closeModal('m-blt-ia')">✕</button></div>
+    <div class="ai-panel">
+      <div class="ai-panel-head"><div class="ai-chip"><div class="ai-chip-dot"></div>DIAGNÓSTICO CLAUDE</div></div>
+      <div id="blt-ia-text" class="ai-text">Desvio de −15% na quantidade medida. Causa raiz: redução da equipe de 14 para 9 pedreiros (−36%) registrada no RDO. Impacto projetado: +18 dias e R$ 112.000 em custo adicional. Ação recomendada: contratação emergencial de subempreiteiro ou redistribuição da equipe da estrutura (97% concluída).</div>
+      <div class="ai-actions"><button class="ai-btn" onclick="generateBltAnalysis()">↻ Reanalisar</button></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-blt-ia')">Fechar</button>
+      <button class="btn btn-fire" onclick="nav('ia');closeModal('m-blt-ia')">Chat IA →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Inspeção -->
+<div class="modal-overlay" id="m-insp">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Nova Inspeção EHS</div><button class="modal-close" onclick="closeModal('m-insp')">✕</button></div>
+    <div class="frow frow-2">
+      <div class="field-compact"><label>Tipo</label><select><option>NR-18 Geral</option><option>EPI/PPE</option><option>Andaimes</option><option>Elétrica prov.</option><option>Near-miss</option></select></div>
+      <div class="field-compact"><label>Área</label><input type="text" placeholder="ex: Bloco C Torre 3"></div>
+    </div>
+    <div class="field-compact" style="margin-bottom:.75rem"><label>Responsável</label><select><option>Paulo Alves (EHS)</option><option>Fernanda Costa (Eng.)</option></select></div>
+    <div class="field-compact" style="margin-bottom:.75rem"><label>Conformidade</label>
+      <select><option>✓ Conforme</option><option>⚠ NC leve</option><option>✗ NC grave — Paralisar</option></select>
+    </div>
+    <div class="field-compact" style="margin-bottom:1rem"><label>Observações</label><textarea rows="3" placeholder="Descreva os achados..."></textarea></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-insp')">Cancelar</button>
+      <button class="btn btn-teal" onclick="closeModal('m-insp')">Registrar inspeção</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cadastro rede saneamento -->
+<div class="modal-overlay" id="m-rede">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Cadastrar Trecho de Rede</div><button class="modal-close" onclick="closeModal('m-rede')">✕</button></div>
+    <div class="frow frow-2">
+      <div class="field-compact"><label>Sistema</label><select><option>SAA — Água</option><option>SES — Esgoto</option><option>SAA — Adutora</option></select></div>
+      <div class="field-compact"><label>ID do trecho</label><input type="text" placeholder="ex: N04-C"></div>
+    </div>
+    <div class="frow frow-3">
+      <div class="field-compact"><label>Material</label><select><option>PVC/JE</option><option>PEAD</option><option>DEFOFO</option><option>Concreto</option><option>Cerâmica</option></select></div>
+      <div class="field-compact"><label>DN (mm)</label><input type="number" placeholder="ex: 150"></div>
+      <div class="field-compact"><label>Extensão (m)</label><input type="number" placeholder="ex: 850"></div>
+    </div>
+    <div class="frow frow-2">
+      <div class="field-compact"><label>Profundidade méd. (m)</label><input type="number" step="0.1" placeholder="1.20"></div>
+      <div class="field-compact"><label>Declividade (%)</label><input type="number" step="0.01" placeholder="0.50"></div>
+    </div>
+    <div class="field-compact" style="margin-bottom:1rem"><label>Observações técnicas</label><textarea rows="2" placeholder="Solo, cruzamentos, interferências..."></textarea></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-rede')">Cancelar</button>
+      <button class="btn btn-teal" onclick="closeModal('m-rede')">Cadastrar trecho</button>
+    </div>
+  </div>
+</div>
+
+<!-- CCTV -->
+<div class="modal-overlay" id="m-cctv">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Registrar Inspeção CCTV</div><button class="modal-close" onclick="closeModal('m-cctv')">✕</button></div>
+    <div class="frow frow-2">
+      <div class="field-compact"><label>Trecho inspecionado</label><select><option>S02-2</option><option>S02-1</option><option>IC-01</option></select></div>
+      <div class="field-compact"><label>Data</label><input type="date" value="2026-05-03"></div>
+    </div>
+    <div class="frow frow-2">
+      <div class="field-compact"><label>Extensão inspecionada (m)</label><input type="number" placeholder="540"></div>
+      <div class="field-compact"><label>Nº de anomalias</label><input type="number" value="2"></div>
+    </div>
+    <div class="field-compact" style="margin-bottom:.75rem"><label>Tipo de anomalia principal</label>
+      <select><option>Infiltração ativa</option><option>Exfiltração</option><option>Deposição de sedimento</option><option>Deformação estrutural</option><option>Raízes</option></select>
+    </div>
+    <div class="field-compact" style="margin-bottom:1rem"><label>Localização da anomalia (km)</label><input type="text" placeholder="ex: km 0.8 – km 1.1"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-cctv')">Cancelar</button>
+      <button class="btn btn-teal" onclick="closeModal('m-cctv')">Registrar CCTV</button>
+    </div>
+  </div>
+</div>
+
+<!-- Amostra de qualidade -->
+<div class="modal-overlay" id="m-amostra">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Registrar Amostra — Qualidade</div><button class="modal-close" onclick="closeModal('m-amostra')">✕</button></div>
+    <div class="frow frow-2">
+      <div class="field-compact"><label>Ponto de coleta</label><select><option>P-01 Reservatório</option><option>P-02 N-04 km1.2</option><option>P-03 N-05 entrada</option></select></div>
+      <div class="field-compact"><label>Data coleta</label><input type="date" value="2026-05-03"></div>
+    </div>
+    <div class="frow frow-3">
+      <div class="field-compact"><label>pH</label><input type="number" step="0.1" placeholder="7.2"></div>
+      <div class="field-compact"><label>Cloro livre (mg/L)</label><input type="number" step="0.01" placeholder="0.32"></div>
+      <div class="field-compact"><label>Turbidez (NTU)</label><input type="number" step="0.01" placeholder="0.18"></div>
+    </div>
+    <div class="frow frow-2">
+      <div class="field-compact"><label>Coliformes totais</label><select><option>Ausente</option><option>Presente</option></select></div>
+      <div class="field-compact"><label>Flúor (mg/L)</label><input type="number" step="0.01" placeholder="0.08"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-amostra')">Cancelar</button>
+      <button class="btn btn-teal" onclick="closeModal('m-amostra')">Registrar amostra</button>
+    </div>
+  </div>
+</div>
+
+<!-- Relatório -->
+<div class="modal-overlay" id="m-rel">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Gerar Relatório com IA</div><button class="modal-close" onclick="closeModal('m-rel')">✕</button></div>
+    <div class="field-compact" style="margin-bottom:.75rem"><label>Tipo</label>
+      <select>
+        <option>Relatório Gerencial Mensal — Obras</option>
+        <option>Boletim EHS Semanal</option>
+        <option>Análise de Desvio Técnico</option>
+        <option>Relatório SNIS — Saneamento</option>
+        <option>Plano de Redução de Perdas</option>
+        <option>Relatório de Qualidade de Água</option>
+        <option>Relatório ESG Consolidado</option>
+      </select>
+    </div>
+    <div class="frow frow-2">
+      <div class="field-compact"><label>Período início</label><input type="date" value="2026-04-01"></div>
+      <div class="field-compact"><label>Período fim</label><input type="date" value="2026-04-30"></div>
+    </div>
+    <div class="field-compact" style="margin-bottom:1rem"><label>Tom</label>
+      <select><option>Técnico / Objetivo</option><option>Executivo / Resumido</option><option>Detalhado com evidências</option></select>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-rel')">Cancelar</button>
+      <button class="btn btn-fire" onclick="closeModal('m-rel')">Gerar com IA →</button>
+    </div>
+  </div>
+</div>
+
+<!-- User -->
+<div class="modal-overlay" id="m-user">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Convidar Usuário</div><button class="modal-close" onclick="closeModal('m-user')">✕</button></div>
+    <div class="field-compact" style="margin-bottom:.75rem"><label>Nome</label><input type="text" placeholder="Nome completo"></div>
+    <div class="field-compact" style="margin-bottom:.75rem"><label>Email</label><input type="email" placeholder="email@empresa.com"></div>
+    <div class="frow frow-2">
+      <div class="field-compact"><label>Perfil</label><select><option>Gestor</option><option>Engenheiro</option><option>EHS</option><option>Técnico</option><option>Visualizador</option></select></div>
+      <div class="field-compact"><label>Módulos</label><select><option>Todos</option><option>Obras Civis</option><option>Saneamento</option><option>EHS</option></select></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-user')">Cancelar</button>
+      <button class="btn btn-fire" onclick="closeModal('m-user')">Enviar convite</button>
+    </div>
+  </div>
+</div>
+
+<!-- Perfil -->
+<div class="modal-overlay" id="m-perfil">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Perfil</div><button class="modal-close" onclick="closeModal('m-perfil')">✕</button></div>
+    <div style="text-align:center;margin-bottom:1.5rem">
+      <div class="avatar" style="width:52px;height:52px;font-size:1.1rem;margin:0 auto .75rem" id="profile-avatar">GS</div>
+      <div style="font-weight:600" id="profile-name">Gestor Silva</div>
+      <div style="font-size:.78rem;color:var(--t3)" id="profile-role">Gestor · Acesso total</div>
+    </div>
+    <div class="field-compact" style="margin-bottom:.75rem"><label>Nome</label><input type="text" id="profile-name-input" value="Gestor Silva"></div>
+    <div class="field-compact" style="margin-bottom:1rem"><label>Email</label><input type="email" value="gestor@construtora.com.br"></div>
+    <div class="modal-foot">
+      <button class="btn btn-red btn-sm" onclick="doLogout()">Sair</button>
+      <button class="btn btn-ghost" onclick="closeModal('m-perfil')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+const S = {
+  apiKey: '',
+  model: 'claude-sonnet-4-20250514',
+  role: 'gestor',
+  userName: 'Gestor Silva',
+  currentPage: 'dashboard',
+  chatHistory: [],
+  aiMode: 'demo', // 'real' | 'demo'
+};
+
+const ROLES = {
+  gestor:     { name:'Gestor Silva',     initials:'GS', label:'Gestor' },
+  engenheiro: { name:'Fernanda Costa',   initials:'FC', label:'Engenheiro' },
+  ehs:        { name:'Paulo Alves',      initials:'PA', label:'EHS Spec.' },
+  tecnico:    { name:'Marcos Rocha',     initials:'MR', label:'Técnico' },
+};
+
+// ═══════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════
+function pickRole(el, role) {
+  document.querySelectorAll('.role-opt').forEach(r => r.classList.remove('active'));
+  el.classList.add('active');
+  S.role = role;
+}
+
+function quickDemo(type) {
+  document.getElementById('l-email').value = type === 'san' ? 'ehs@construtora.com.br' : 'gestor@construtora.com.br';
+  if (type === 'san') {
+    document.querySelectorAll('.role-opt').forEach(r => r.classList.remove('active'));
+    document.querySelectorAll('.role-opt')[2].classList.add('active');
+    S.role = 'ehs';
+  }
+  doLogin();
+}
+
+function doLogin() {
+  const apiKey = document.getElementById('l-apikey').value.trim();
+  if (apiKey) {
+    S.apiKey = apiKey;
+    S.aiMode = 'real';
+  } else {
+    S.aiMode = 'demo';
+  }
+  const u = ROLES[S.role];
+  S.userName = u.name;
+  setUserUI(u);
+  updateApiStatus();
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  buildRiskMatrix();
+  nav('dashboard');
+}
+
+function doLogout() {
+  S.chatHistory = [];
+  S.apiKey = '';
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('login-screen').style.display = 'flex';
+  closeModal('m-perfil');
+}
+
+function setUserUI(u) {
+  document.getElementById('top-avatar').textContent = u.initials;
+  document.getElementById('top-name').textContent = u.name;
+  document.getElementById('top-role').textContent = u.label;
+  document.getElementById('profile-avatar').textContent = u.initials;
+  document.getElementById('profile-name').textContent = u.name;
+  document.getElementById('profile-role').textContent = `${u.label} · Acesso total`;
+  document.getElementById('u-name-row').textContent = u.name;
+}
+
+function updateApiStatus() {
+  const top = document.getElementById('ai-status-top');
+  const txt = document.getElementById('ai-status-txt');
+  const dot = document.getElementById('sidebar-api-dot');
+  const stxt = document.getElementById('sidebar-api-txt');
+  if (S.aiMode === 'real') {
+    top.className = 'ai-status connected';
+    txt.textContent = 'Claude Real';
+    dot.style.background = 'var(--teal)';
+    stxt.textContent = 'Claude API conectado';
+  } else {
+    top.className = 'ai-status mock';
+    txt.textContent = 'IA Demo';
+    dot.style.background = 'var(--gold)';
+    stxt.textContent = 'Modo demonstração';
+  }
+}
+
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('page-' + page);
+  if (el) el.classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const ni = document.getElementById('ni-' + page);
+  if (ni) ni.classList.add('active');
+
+  S.currentPage = page;
+  if (window.innerWidth < 768) closeSidebar();
+  document.getElementById('content').scrollTop = 0;
+
+  // Update bottom nav
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+  const bnMap = { dashboard:'bn-dash', 'san-dashboard':'bn-san', ia:'bn-ia', ehs:'bn-ehs', alertas:'bn-alrt' };
+  if (bnMap[page]) document.getElementById(bnMap[page])?.classList.add('active');
+}
+
+function selectObra(name, page) {
+  document.getElementById('obra-name').textContent = name;
+  nav(page);
+}
+
+// ═══════════════════════════════════════
+// SIDEBAR
+// ═══════════════════════════════════════
+function toggleSidebar() {
+  const s = document.getElementById('sidebar');
+  const b = document.getElementById('burger');
+  const o = document.getElementById('sidebar-overlay');
+  s.classList.toggle('open');
+  b.classList.toggle('open');
+  o.classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('burger').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('show');
+}
+
+// ═══════════════════════════════════════
+// MODAIS
+// ═══════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m =>
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); })
+);
+
+// ═══════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════
+function switchTab(el, id) {
+  const parent = el.closest('.page') || el.closest('.modal') || document;
+  parent.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  parent.querySelectorAll('.tabp').forEach(t => t.classList.remove('active'));
+  const tp = document.getElementById(id);
+  if (tp) tp.classList.add('active');
+}
+
+// ═══════════════════════════════════════
+// RISK MATRIX
+// ═══════════════════════════════════════
+function buildRiskMatrix() {
+  const m = document.getElementById('risk-matrix');
+  if (!m) return;
+  const grid = [
+    ['L','L','L','M','M'],
+    ['L','L','M','M','H'],
+    ['L','M','M','H','H'],
+    ['M','M','H','H','C'],
+    ['M','H','H','C','C'],
+  ];
+  const cls = { L:'rc-l', M:'rc-m', H:'rc-h', C:'rc-c' };
+  const lbl = { L:'B', M:'M', H:'A', C:'CR' };
+  m.innerHTML = grid.flat().map(v => `<div class="risk-cell ${cls[v]}">${lbl[v]}</div>`).join('');
+}
+
+// ═══════════════════════════════════════
+// CLAUDE AI — EMBEDDED
+// ═══════════════════════════════════════
+const SYSTEM_PROMPT = `Você é o CantIA, assistente de gestão de obras e saneamento com IA embarcada.
+Responda SEMPRE em português brasileiro. Seja técnico, objetivo e mencione normas quando relevante.
+
+CONTEXTO DA PLATAFORMA:
+- Módulo Obras Civis: boletins de medição, EHS (NR-18), cronograma, custos
+- Módulo Saneamento: SAA (água) e SES (esgoto), IPD, pressão, qualidade, CCTV
+- Normas: ABNT NBR 12218 (água), NBR 9649 (esgoto), NR-18 (segurança), Portaria MS 888/2021
+
+DADOS OBRAS CIVIS (Vila Nova Etapa 2):
+- Avanço físico: 84% | Desvio: -12 dias | Conformidade NR-18: 92%
+- Boletim #47 Alvenaria Bloco C: medido 2.840m² vs previsto 3.360m² (-15%) — causa: equipe reduzida de 14 para 9 pedreiros
+- Alerta crítico: andaime Bloco C Torre 3 com inspeção NR-18 vencida
+
+DADOS SANEAMENTO (SAA/SES Setor N-04):
+- IPD: 38% (meta FUNASA: 25%) — maior problema: VRP P-07 desregulada, 62 m.c.a
+- Rede água: 47.2 km | Rede esgoto: 31.5 km
+- Infiltração ativa detectada: coletor S02-2 km 0.8-1.1, declividade 0.3% < mínimo NBR 9649 (0.5%)
+- Qualidade da água: pH 7.2, cloro 0.32 mg/L, turbidez 0.18 NTU, coliformes ausentes — 98.2% conforme
+
+Quando recomendar ações, seja específico com quantidades, prazos e referências normativas.`;
+
+async function callClaude(messages) {
+  if (S.aiMode === 'demo' || !S.apiKey) return getDemoResponse(messages);
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': S.apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: S.model, max_tokens: 1000, system: SYSTEM_PROMPT, messages })
+    });
+    if (!res.ok) {
+      const e = await res.json();
+      throw new Error(e.error?.message || 'API error');
+    }
+    const d = await res.json();
+    return d.content[0].text;
+  } catch (err) {
+    console.error('Claude error:', err);
+    return `Erro ao conectar com a API Claude: ${err.message}. Verifique sua chave em Configuração IA.`;
+  }
+}
+
+function getDemoResponse(messages) {
+  const last = (messages[messages.length-1]?.content || '').toLowerCase();
+  if (last.includes('atraso') || last.includes('prazo') || last.includes('cronograma')) {
+    return `**Risco de atraso: ALTO** 🔴\n\nCom base nos boletins #44–#47:\n- Avanço físico: 84% (previsto: 91%)\n- Desvio acumulado: **−12 dias**\n- Frente crítica: Alvenaria Bloco C (−30% produtividade)\n\n**Impacto financeiro projetado:** R$ 87.400 a R$ 112.000\n\n**Ação recomendada:** Contratar 5 pedreiros adicionais por 3 semanas no Bloco C, ou redistribuir equipe da estrutura (97% concluída). Isso pode recuperar 8 dos 12 dias de atraso.`;
+  }
+  if (last.includes('ipd') || last.includes('perd') || last.includes('saneamento') || last.includes('água')) {
+    return `**IPD 38% — Diagnóstico e Plano de Ação** 💧\n\nCausa principal identificada:\n1. **VRP P-07 desregulada** — 62 m.c.a vs máximo NBR 12218 de 50 m.c.a → excesso de pressão = +26% de pressão nos ramais → estresse nas juntas PVC/JE de 1998\n2. **Trecho S02-2** — declividade 0.3% abaixo do mínimo NBR 9649 (0.5%) → infiltração km 0.8–1.1\n\n**Plano de ação para reduzir a 25%:**\n- Semana 1: Readequar VRP P-07 para 35 m.c.a\n- Semana 2–3: Inspeção CCTV trecho km 2.4–3.1\n- Mês 2: Remontagem S02-2 com ajuste de greide\n- Mês 3: DMC em N-04 para monitoramento contínuo\n\nImpacto esperado: redução de ~15 pontos percentuais no IPD.`;
+  }
+  if (last.includes('ehs') || last.includes('segurança') || last.includes('acidente')) {
+    return `**Análise EHS — Situação atual** 🦺\n\n**Pontos positivos:**\n- 21 dias consecutivos sem acidente ✓\n- Conformidade NR-18 geral em 92% ✓\n- 0 incidentes registráveis no mês ✓\n\n**Atenção imediata:**\n- Andaime Bloco C Torre 3: **NR-18 vencida** → paralisar uso até inspeção\n- 3 near-misses esta semana na área de instalações → padrão de queda de objeto\n- Chuvas de 40mm previstas → risco de instabilidade nos andaimes\n\n**Ação recomendada:** Inspeção emergencial do andaime Bloco C antes de quinta-feira (chuvas). Realizar DDS específico sobre trabalho em altura.`;
+  }
+  if (last.includes('relatório') || last.includes('relatorio') || last.includes('snis')) {
+    return `**Relatório Executivo — Maio/2026** 📄\n\n**OBRAS CIVIS:**\nObra com 84% de avanço e desvio de 12 dias. Principal gargalo: Alvenaria Bloco C com produtividade 30% abaixo do previsto. EHS em dia (0 acidentes, 92% conformidade NR-18). Ação necessária: reforço de equipe.\n\n**SANEAMENTO:**\nIPD em 38% (acima do limite de 25%). Rede de água com 47.2 km executados, qualidade conforme Portaria 888/2021. Coletor S02-2 com infiltração ativa — intervenção urgente necessária.\n\n**ESG:**\n- ODS 6: cobertura de saneamento 98.4% — conforme meta\n- ODS 8: zero acidentes no mês — excelente\n- ODS 13: resíduos de canteiro −31% vs meta — destaque positivo`;
+  }
+  return `Analisando os dados disponíveis da obra e do sistema de saneamento...\n\nOs principais pontos de atenção são:\n1. **Desvio de 12 dias** na frente de alvenaria Bloco C (obras civis)\n2. **IPD de 38%** no sistema de água, acima do limite regulatório\n3. **Infiltração ativa** no coletor S02-2 km 0.8\n\nPosso aprofundar qualquer um desses pontos, calcular impactos, verificar conformidade normativa ou criar um plano de ação. O que você precisa?`;
+}
+
+// ═══════════════════════════════════════
+// CHAT
+// ═══════════════════════════════════════
+function useQP(el) {
+  document.getElementById('chat-input').value = el.textContent;
+  sendMsg();
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+}
+
+async function sendMsg() {
+  const inp = document.getElementById('chat-input');
+  const txt = inp.value.trim();
+  if (!txt) return;
+
+  const msgs = document.getElementById('chat-msgs');
+  const now = new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+
+  msgs.innerHTML += `<div class="msg msg-user"><div class="bubble bubble-user">${escHtml(txt)}</div><div class="msg-meta" style="text-align:right">Você · ${now}</div></div>`;
+  inp.value = ''; inp.style.height = 'auto';
+
+  // Typing indicator
+  const typingId = 'typing-' + Date.now();
+  msgs.innerHTML += `<div class="msg msg-ai" id="${typingId}"><div class="bubble bubble-ai"><div class="typing-dots"><div class="td"></div><div class="td"></div><div class="td"></div></div></div></div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+
+  document.getElementById('chat-send-btn').disabled = true;
+
+  S.chatHistory.push({ role: 'user', content: txt });
+  const response = await callClaude(S.chatHistory.slice(-10));
+  S.chatHistory.push({ role: 'assistant', content: response });
+
+  document.getElementById(typingId)?.remove();
+  document.getElementById('chat-send-btn').disabled = false;
+  msgs.innerHTML += `<div class="msg msg-ai"><div class="bubble bubble-ai">${formatAiText(response)}</div><div class="msg-meta">CantIA · ${now}</div></div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function formatAiText(t) {
+  return escHtml(t)
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\n/g,'<br>');
+}
+
+// ═══════════════════════════════════════
+// AI PANEL GENERATORS
+// ═══════════════════════════════════════
+async function generateDashInsight() {
+  const el = document.getElementById('dash-ai-text');
+  el.innerHTML = '<div class="ai-loading"><div class="ai-spinner"></div>Analisando dados da obra...</div>';
+  const r = await callClaude([{ role:'user', content:'Faça um resumo executivo conciso do status atual da obra, destacando os principais desvios e recomendações urgentes.' }]);
+  el.innerHTML = formatAiText(r);
+}
+
+async function generateSanInsight() {
+  const el = document.getElementById('san-ai-text');
+  el.innerHTML = '<div class="ai-loading"><div class="ai-spinner"></div>Analisando sistemas de saneamento...</div>';
+  const r = await callClaude([{ role:'user', content:'Faça um diagnóstico executivo do sistema de saneamento (SAA e SES), destacando os alertas críticos e as principais ações necessárias.' }]);
+  el.innerHTML = formatAiText(r);
+}
+
+async function generateMedAnalysis() {
+  const el = document.getElementById('med-ai-text');
+  el.innerHTML = '<div class="ai-loading"><div class="ai-spinner"></div>Comparando boletins...</div>';
+  const r = await callClaude([{ role:'user', content:'Analise comparativamente os boletins de medição recentes, identifique tendências de produtividade e projete o impacto no prazo de entrega.' }]);
+  el.innerHTML = formatAiText(r);
+}
+
+async function generateBltAnalysis() {
+  const el = document.getElementById('blt-ia-text');
+  el.innerHTML = '<div class="ai-loading"><div class="ai-spinner"></div>Analisando boletim...</div>';
+  const r = await callClaude([{ role:'user', content:'Analise detalhadamente o boletim #47 da frente Alvenaria Bloco C com desvio de -15%. Identifique causa raiz, impacto financeiro e plano de ação corretiva.' }]);
+  el.innerHTML = formatAiText(r);
+}
+
+async function generateReport(type) {
+  nav('relatorios');
+  const msg = type === 'snis'
+    ? 'Gere um relatório SNIS completo para o sistema de saneamento do mês de abril/2026.'
+    : type === 'saneamento'
+    ? 'Gere um relatório técnico completo do sistema de saneamento (SAA e SES) para o mês de abril/2026.'
+    : 'Gere um relatório gerencial mensal da obra Vila Nova Etapa 2 para abril/2026 com análise de avanço, EHS e financeiro.';
+  S.chatHistory = [];
+  nav('ia');
+  document.getElementById('chat-input').value = msg;
+  await sendMsg();
+}
+
+function askSanChat(msg) {
+  nav('ia');
+  document.getElementById('chat-input').value = msg;
+  sendMsg();
+}
+
+// ═══════════════════════════════════════
+// CONFIG IA
+// ═══════════════════════════════════════
+function updateApiKey(key) {
+  S.apiKey = key;
+  S.aiMode = key ? 'real' : 'demo';
+  updateApiStatus();
+}
+function updateModel(m) { S.model = m; }
+async function testApiKey() {
+  const box = document.getElementById('cfg-status-box');
+  const txt = document.getElementById('cfg-status-text');
+  box.className = 'alert a-teal';
+  txt.textContent = 'Testando conexão...';
+  const r = await callClaude([{ role:'user', content:'Responda apenas: "Conexão OK".' }]);
+  if (r.includes('OK') || r.includes('Conexão') || S.aiMode === 'demo') {
+    box.className = 'alert a-green';
+    txt.textContent = S.aiMode === 'real' ? '✓ API Claude conectada com sucesso!' : '✓ Modo demo funcionando (sem API key)';
+    updateApiStatus();
+  } else {
+    box.className = 'alert a-red';
+    txt.textContent = r;
+  }
+}
+
+// ═══════════════════════════════════════
+// MISC
+// ═══════════════════════════════════════
+function submitBoletim() {
+  closeModal('m-boletim');
+  nav('ia');
+  document.getElementById('chat-input').value = 'Analise o novo boletim da frente Alvenaria Bloco C com 15% de desvio negativo e me diga o que devo fazer.';
+  sendMsg();
+}
+
+// Progress bars animation
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.prog-fill').forEach(b => {
+    const w = b.style.width; b.style.width = '0';
+    setTimeout(() => { b.style.width = w; }, 100);
+  });
+});
+</script>
+</body>
+</html>
